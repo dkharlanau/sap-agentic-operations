@@ -1,0 +1,3 @@
+change_id,object_id,attribute,value,changed_at
+CHG-100,C-100,delivery_control,OLD,2026-08-25T09:40:00Z
+CHG-200,C-100,delivery_control,NEW,2026-08-25T10:15:00Z
