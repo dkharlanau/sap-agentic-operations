@@ -2,62 +2,63 @@
 
 [![SAO practical toolkit](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/product.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/product.yml)
 [![SAO full suite](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/suite.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/suite.yml)
-[![Dynamic variants](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/dynamic-variants.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/dynamic-variants.yml)
 
 **A local-first, evidence-first toolkit for diagnosing, reconciling, validating, and safely recovering SAP-heavy enterprise operations.**
 
 Maintained by **Dzmitryi Kharlanau** — SAP Transformation · Enterprise Operations · Agentic AI.
 
-Status: **experimental practical toolkit v0.4-dev / SAO-Bench v0.3-dev**.
+Status: **Practical Toolkit `0.4.0-alpha.1` · SAO-Bench `0.3-dev`**.
 
 ---
 
-## Start with a real operational question
+## The problem SAO is trying to solve
 
-A customer is wrong in S/4. An IDoc is green. A mapping changed. A target value is stale. Somebody proposes: “just reprocess it.”
+A customer is wrong in S/4. An IDoc is green. A mapping changed. A target value is stale. A ticket says that last time somebody reprocessed the message and it worked.
 
-The difficult question is not whether one technical message succeeded.
+The difficult question is not:
+
+> Did one technical step return success?
 
 It is:
 
-> **What business change are we trying to explain, which evidence is actually related to that change, and what recovery action is justified without making the state worse?**
+> **Which business change are we trying to explain, which evidence is actually related to that change, and what recovery action is justified without making the state worse?**
 
-SAO turns fragmented operational evidence into:
+SAO turns fragmented evidence into:
 
 - a bounded diagnosis;
 - missing evidence;
 - safe next actions;
-- actions that are explicitly **not** justified;
+- actions explicitly **not** justified by current evidence;
 - a business-level resolution condition;
 - traceable evidence references.
 
-The first practical workflow does this without SAP credentials, a database, or an LLM.
+The practical alpha does this **without SAP credentials, a database, or an LLM**.
 
 ```text
-SAP / MDG / IDoc / AIF / CPI / exports
-                 |
-                 v
-           Evidence Pack
-                 |
-      identity + authority
-      causality + freshness
-      mapping + message state
-      target business state
-                 |
-                 v
-          Incident Analyzer
-                 |
-      diagnosis / evidence gap
-      safe recovery choices
-      blocked unsafe shortcuts
-                 |
-                 v
-       business postcondition
+SAP / MDG / IDoc / AIF / CPI / Excel / exports
+                       |
+                       v
+                 Evidence Pack
+                       |
+            identity + authority
+            causality + freshness
+            mapping + message state
+            target business state
+                       |
+                       v
+                Incident Analyzer
+                       |
+            diagnosis / evidence gap
+            safe recovery choices
+            blocked unsafe shortcuts
+                       |
+                       v
+             business postcondition
 ```
 
 ---
 
-## Try it in about a minute
+# Try it in a minute
 
 Requirements: Python 3.11+.
 
@@ -71,61 +72,57 @@ sao demo
 
 The default demo models a common support trap:
 
-- an older customer change has a successful message;
-- a newer authoritative MDG change exists;
+- an older source change has a successful message;
+- a newer authoritative change exists;
 - the target still contains the old value;
 - no message is causally linked to the current change.
 
-SAO should classify it as:
+SAO classifies this as:
 
 ```text
 current_outbound_event_not_proven
 ```
 
-and explicitly reject:
+and explicitly blocks shortcuts such as:
 
 ```text
 reprocess_old_successful_message
 manual_target_overwrite
 ```
 
-The generated report is written to:
+The report is generated locally:
 
 ```text
 sao-demo/sao-output/incident-report.md
 sao-demo/sao-output/incident-report.json
 ```
 
-### Explore different failure modes
-
-```bash
-sao demo --list
-
-sao demo --scenario business-rejection --output /tmp/sao-business
-sao demo --scenario mapping-drift --output /tmp/sao-mapping
-sao demo --scenario target-mismatch --output /tmp/sao-target
-sao demo --scenario resolved --output /tmp/sao-resolved
-```
-
-Bundled scenarios currently cover:
-
-| Scenario | What it demonstrates |
-|---|---|
-| `missing-current-event` | old technical success does not explain a newer business change |
-| `business-rejection` | transport success is not business acceptance |
-| `mapping-drift` | historical replay cannot silently use a newer identity mapping |
-| `target-mismatch` | accepted message but wrong business postcondition |
-| `technical-failure` | retry is unsafe before commit/idempotency state is understood |
-| `resolved` | complete evidence chain to verified target state |
-| `identity-unresolved` | cross-system comparison is blocked without canonical identity |
-| `stale-target-observation` | an old target snapshot cannot prove a new message succeeded |
-| `target-identity-mismatch` | the event targets a different identity than current mapping |
-
 ---
 
-## Analyze your own exports
+# Practical workflows available in Alpha 1
 
-An SAO **Evidence Pack** is intentionally a small folder of JSON/CSV files:
+## 1. Incident Analyzer — full Evidence Pack
+
+Create a blank pack:
+
+```bash
+sao incident init ./incident \
+  --incident-id INC-001 \
+  --object-type customer \
+  --source-id C-100 \
+  --target-id BP-501 \
+  --authority-system MDG \
+  --attribute delivery_control
+```
+
+Fill the exported evidence and run:
+
+```bash
+sao incident validate ./incident
+sao incident analyze ./incident
+```
+
+Minimal pack:
 
 ```text
 incident/
@@ -136,42 +133,201 @@ incident/
   identity_map.csv
 ```
 
-Validate:
+Read [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md).
 
-```bash
-sao incident validate ./incident
-```
+### What the analyzer checks
 
-Analyze:
+- canonical identity resolved / ambiguous / unresolved;
+- current authoritative change;
+- explicit change-to-message causality;
+- mapping version drift;
+- technical message failure;
+- transport success vs business rejection;
+- target observation freshness;
+- target business-state postcondition;
+- safe and unsafe recovery choices.
 
-```bash
-sao incident analyze ./incident
-```
-
-Read the full input contract in [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md).
-
-### Why this is connector-neutral
-
-The product is built around evidence semantics, not around one SAP API.
-
-Future collectors can all produce the same Evidence Pack:
-
-```text
-Cloud ALM       ─┐
-AIF export       │
-CPI export       ├──> Evidence Pack ──> same diagnostic engine
-IDoc CSV         │
-custom API/SQL   │
-manual Excel    ─┘
-```
-
-Connectors can change. The meaning of identity, authority, causality, mapping version, acknowledgement and business postcondition should not.
+It does not silently infer that the latest message belongs to the latest change.
 
 ---
 
-## Example of the output model
+## 2. Quick Check — one CSV for Excel-style triage
 
-A diagnosis is not a free-form paragraph. It is a structured operational decision:
+If you already maintain one row per customer/order/incident in Excel, use the shorter path:
+
+```bash
+sao quickcheck demo
+sao quickcheck analyze my-incidents.csv
+```
+
+Quick Check is not a weaker second engine. Every row is converted into an in-memory Evidence Pack and evaluated by the same incident semantics.
+
+Useful for:
+
+- AMS incident lists;
+- customer replication backlogs;
+- cutover validation spreadsheets;
+- IDoc triage lists;
+- deciding which cases deserve a richer Evidence Pack.
+
+Read [`docs/QUICKCHECK.md`](docs/QUICKCHECK.md).
+
+---
+
+## 3. Batch triage — many Evidence Packs
+
+```bash
+sao batch ./incident-packs --output ./triage
+```
+
+Outputs:
+
+```text
+triage/
+  batch-report.csv
+  batch-report.json
+  batch-report.md
+```
+
+The report aggregates incidents by failure class and gives the first evidence-backed next action for each case.
+
+---
+
+## 4. Local Workbench
+
+View an incident without reading JSON:
+
+```bash
+sao workbench ./incident
+```
+
+or export a static local HTML report:
+
+```bash
+sao workbench ./incident --output incident.html
+```
+
+The Workbench shows:
+
+- evidence chain;
+- current classification;
+- findings;
+- missing evidence;
+- safe actions;
+- actions not justified by current evidence;
+- resolution condition.
+
+It is read-only and local. The alpha does not upload the Evidence Pack.
+
+---
+
+## 5. Semantic Master-Data Reconciliation
+
+A normal CSV diff answers:
+
+> Which cells differ?
+
+SAO asks:
+
+> **Which identity is this, who owns this attribute, which snapshot is newer, and is a correction actually justified?**
+
+Try it:
+
+```bash
+sao reconcile demo
+sao reconcile analyze ./reconciliation
+```
+
+Current discrepancy classes include:
+
+- unresolved / ambiguous identity;
+- target record missing;
+- attribute authority unresolved;
+- aligned;
+- mismatch with unknown freshness;
+- authoritative mismatch;
+- non-authoritative snapshot newer than the authoritative export.
+
+That last case is deliberately important: SAO refuses to overwrite a newer target from a stale source snapshot just because the source is usually authoritative.
+
+Read [`docs/RECONCILIATION.md`](docs/RECONCILIATION.md).
+
+---
+
+## 6. Normalize SAP / Excel exports
+
+Real exports rarely use SAO's canonical column names.
+
+Use an explicit mapping rather than manually renaming every file:
+
+```bash
+sao normalize demo
+
+sao normalize csv \
+  --table messages \
+  --input we02-export.csv \
+  --mapping messages.mapping.json \
+  --output incident/messages.csv
+```
+
+Mappings can define:
+
+- source-column names;
+- constants;
+- value maps such as `53 -> success`, `51 -> failed`.
+
+SAO deliberately does not auto-guess that an arbitrary field is a canonical identity or business status.
+
+Read [`docs/NORMALIZING-EXPORTS.md`](docs/NORMALIZING-EXPORTS.md).
+
+---
+
+# Nine reproducible incident scenarios
+
+```bash
+sao demo --list
+```
+
+| Scenario | What it demonstrates |
+|---|---|
+| `missing-current-event` | old success does not explain a newer change |
+| `business-rejection` | transport success is not business acceptance |
+| `mapping-drift` | historical replay cannot silently use a newer mapping |
+| `target-mismatch` | accepted message but wrong target business state |
+| `technical-failure` | retry is unsafe until commit/idempotency state is understood |
+| `resolved` | complete causal chain to verified target state |
+| `identity-unresolved` | cross-system comparison blocked without canonical identity |
+| `stale-target-observation` | an old target snapshot cannot prove a new message succeeded |
+| `target-identity-mismatch` | event target conflicts with resolved business identity |
+
+These are synthetic operating scenarios, not copied client incidents.
+
+---
+
+# Why SAO is connector-neutral
+
+SAO is built around **evidence semantics**, not around one SAP API.
+
+```text
+manual Excel    ─┐
+WE02 / AIF CSV   │
+CPI export       │
+OpenTelemetry    ├──> canonical evidence ──> same diagnostic engine
+Cloud ALM        │
+custom API/SQL  ─┘
+```
+
+This is intentional.
+
+A connector may change. The meaning of identity, authority, causality, mapping version, acknowledgement and business postcondition should not.
+
+Cloud ALM / AIF / CPI collectors are roadmap items; Alpha 1 does **not** claim a live SAP connector yet.
+
+---
+
+# Example output
+
+A diagnosis is structured, not free-form AI prose:
 
 ```json
 {
@@ -199,35 +355,13 @@ The goal is not to make the tool sound intelligent. The goal is to make the oper
 
 ---
 
-# What SAO is becoming
+# Under the practical toolkit: the assurance lab
 
-The practical toolkit is the front door. Underneath it is a larger architecture and assurance lab.
+The user-facing toolkit is now the front door. The repository also contains the deeper architecture and agent-assurance machinery that protects its semantics.
 
-The project is designed around four connected surfaces.
+## Enterprise Architecture as Code
 
-## 1. SAP Operations Toolkit
-
-Current:
-
-- Evidence Pack v0.1;
-- deterministic Incident Analyzer;
-- installable zero-dependency CLI;
-- nine reproducible failure scenarios;
-- Markdown + JSON reports.
-
-Next:
-
-- Integration Operations Pack;
-- Cloud ALM read-only collector;
-- local Workbench;
-- semantic master-data reconciliation;
-- cutover integrity campaigns.
-
-See [`ROADMAP.md`](ROADMAP.md).
-
-## 2. Enterprise Architecture as Code
-
-SAO can model:
+SAO models:
 
 ```text
 process
@@ -241,7 +375,7 @@ process
   -> cutover state
 ```
 
-Validate an example:
+Validate a context:
 
 ```bash
 python sao.py context-check \
@@ -249,86 +383,65 @@ python sao.py context-check \
   --strict
 ```
 
-Compare architecture snapshots:
+Compare architectural drift:
 
 ```bash
 python sao.py context-diff before.json after.json
 ```
 
-The diff highlights changes such as authority drift, integration semantics, idempotency, business postconditions, removed controls and agent-capability changes.
-
 Start with [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-## 3. Synthetic Enterprise Lab
+## Synthetic Enterprise Lab
 
-The stateful simulator models control failures without pretending to emulate S/4HANA.
+The simulator exercises:
 
-It includes:
-
-- canonical identity and mapping versions;
+- identity and mapping drift;
 - policy drift;
-- delayed/dropped/duplicate messages;
+- delayed / duplicated messages;
 - approval expiry;
-- before-state/precondition binding;
+- before-state binding;
 - idempotency collisions;
-- business postcondition failures;
-- audit evidence;
+- failed business postconditions;
+- audit gaps;
 - governed compensation;
-- trust-aware memory and evidence.
-
-Run:
+- untrusted operational memory.
 
 ```bash
 python sao.py tests
 ```
 
-## 4. SAO-Bench and Agent Assurance
+## SAO-Bench / SAO-Trace
 
-SAO-Bench contains 51 synthetic enterprise-control cases across integration operations, master data, business process, agent security and state change.
+SAO-Bench currently contains 51 synthetic enterprise-control cases across integration operations, master data, business process, agent security and state change.
 
-It exists to test whether an agent/runtime respects enterprise control boundaries — not to measure writing quality.
-
-Examples include:
-
-- unresolved identity;
-- old successful message vs newer source change;
-- ambiguous master-data authority;
-- duplicate/replay risk;
-- stale approval;
-- tool-output instruction injection;
-- memory poisoning;
-- capability escalation;
-- technical success with failed business postcondition;
-- missing provenance.
-
-The reference self-test is a harness check, not an AI score.
+The benchmark evaluates control decisions, not writing style.
 
 ```bash
 python sao.py audit
 python sao.py self-test
 ```
 
+The reference self-test checks the harness. It is not a model score.
+
 ---
 
 # Professional views
 
-SAO is intentionally useful from three different roles.
-
 ### SAP / Enterprise Architect
 
-Focus on business truth, authority, integration semantics, failure/recovery, clean-core placement, observability and bounded agent capability.
+Use SAO for business authority, integration semantics, recovery boundaries, architecture drift and bounded agent capability.
 
 Start with [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ### SAP Consultant / AMS Lead
 
-Focus on evidence collection, repeatable diagnostics, incident ownership, safe recovery, runbook quality and business-level resolution.
+Use SAO for evidence collection, repeatable diagnostics, recovery decisions and business-level resolution.
 
-Start with [`docs/AGENTIC-AMS-OPERATING-MODEL.md`](docs/AGENTIC-AMS-OPERATING-MODEL.md) and [`docs/SAP-OPERATIONS-FAILURE-ATLAS.md`](docs/SAP-OPERATIONS-FAILURE-ATLAS.md).
+Start with [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md) and [`docs/AGENTIC-AMS-OPERATING-MODEL.md`](docs/AGENTIC-AMS-OPERATING-MODEL.md).
 
 ### System Analyst
 
-Focus on requirement → invariant → identity → contract → control → evidence → test → owner.
+Use SAO for requirement → invariant → identity → contract → control → evidence → test → owner.
 
 Start with [`docs/BUSINESS-TRACEABILITY.md`](docs/BUSINESS-TRACEABILITY.md).
 
@@ -341,19 +454,19 @@ Start with [`docs/BUSINESS-TRACEABILITY.md`](docs/BUSINESS-TRACEABILITY.md).
 3. **Change causality before replay.**
 4. **Deterministic rules before probabilistic reasoning.**
 5. **Recommendation is not authorization.**
-6. **Authorization is not execution.**
-7. **A green interface is not a verified business outcome.**
-8. **A tool failure never authorizes a broader tool.**
-9. **Current evidence outranks stale operational memory.**
-10. **Compensation is a governed state change, not an escape hatch.**
-11. **A score without provenance is not a benchmark result.**
-12. **The practical tool should be useful without an AI model.**
+6. **A green interface is not a verified business outcome.**
+7. **A tool failure never authorizes a broader tool.**
+8. **Current evidence outranks stale operational memory.**
+9. **Compensation is a governed state change, not an escape hatch.**
+10. **A score without provenance is not a benchmark result.**
+11. **The practical tool should be useful without an AI model.**
+12. **Connectors may change; evidence semantics should remain stable.**
 
 ---
 
-# What SAO deliberately does not replace
+# What SAO does not try to replace
 
-SAO is not intended to become:
+SAO is not:
 
 - another SAP monitoring dashboard;
 - another SAP MCP server;
@@ -362,45 +475,43 @@ SAO is not intended to become:
 - an unrestricted SAP write agent;
 - a replacement for SAP Cloud ALM, Integration Suite monitoring, Migration Cockpit/DTV, Joule Studio or AI Agent Hub.
 
-Its niche is the layer between **observation and a safe operational decision**.
+Its intended niche is the layer between **observation and a safe operational decision**.
 
 ---
 
-# Current product roadmap
+# Alpha 1 stopping rule
 
-The roadmap is now measured by time-to-first-value and external use rather than framework size.
+The practical alpha is now broad enough to test with people.
 
-Priority order:
+The next major feature should not be added merely because it is interesting.
 
-1. Evidence Pack + Incident Analyzer — **in progress / first implementation available**;
-2. Integration Operations Pack;
-3. simple installation and demo quality;
-4. local Workbench;
-5. Cloud ALM read-only connector;
-6. semantic Master Data Reconciliation;
-7. Cutover Integrity Pack;
-8. architecture rendering/traceability;
-9. cross-runtime agent assurance.
+Before another large framework layer, SAO should collect field evidence from SAP practitioners:
+
+- Did the classification help?
+- What evidence was hard to prepare?
+- Which recovery class was missing?
+- Which conclusion was wrong?
+- Which export format should be normalized next?
+
+Use the **SAO practical field report** issue template and keep client data out of public issues.
 
 See [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
-# Safety, privacy and SAP scope
+# Safety and privacy
 
-SAO examples are synthetic.
+Local Evidence Packs stay local; the practical toolkit does not upload them.
 
 Do not publish:
 
 - customer/client names;
-- production IDs that reveal private context;
+- production identifiers that reveal private context;
 - ticket contents;
 - internal URLs;
 - credentials/tokens;
 - proprietary payloads;
 - copied SAP product code.
-
-Local Evidence Packs stay local; the practical toolkit does not upload them.
 
 SAO is independent work. It is not an official SAP project, SAP certification, production-safety certification, or substitute for landscape-specific authorization, security, compliance or business ownership.
 
@@ -408,18 +519,19 @@ SAO is independent work. It is not an official SAP project, SAP certification, p
 
 # Repository map
 
-- [`sao_toolkit/`](sao_toolkit/) — practical Evidence Pack / incident-analysis product code
-- [`examples/evidence-packs/`](examples/evidence-packs/) — ready-to-run operational evidence examples
-- [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md) — practical input contract
-- [`docs/`](docs/) — architecture, operations, benchmark and governance
-- [`schemas/`](schemas/) — machine-readable contracts
+- [`sao_toolkit/`](sao_toolkit/) — practical toolkit code
+- [`examples/evidence-packs/`](examples/evidence-packs/) — ready-to-run operational examples
+- [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md) — full incident input contract
+- [`docs/QUICKCHECK.md`](docs/QUICKCHECK.md) — one-CSV path
+- [`docs/RECONCILIATION.md`](docs/RECONCILIATION.md) — semantic master-data reconciliation
+- [`docs/NORMALIZING-EXPORTS.md`](docs/NORMALIZING-EXPORTS.md) — explicit export mappings
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture entry point
 - [`simulator/`](simulator/) — Synthetic Enterprise Lab
 - [`evals/`](evals/) — SAO-Bench corpus
 - [`adapters/`](adapters/) — runtime-neutral agent adapter protocol
-- [`traces/`](traces/) — SAO-Trace examples and invariants
-- [`results/`](results/) — public reproducible result ledger
-- [`research/`](research/) — source-backed architecture research
+- [`traces/`](traces/) — SAO-Trace
 - [`ROADMAP.md`](ROADMAP.md) — product roadmap
+- [`CHANGELOG.md`](CHANGELOG.md) — product + benchmark changes
 
 ---
 
