@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Zero-dependency command entry point for SAP Agentic Operations.
-
-The CLI intentionally delegates to the repository's auditable scripts rather than
-creating a second implementation of benchmark truth.
-"""
+"""Zero-dependency command entry point for SAP Agentic Operations."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+from sao_toolkit.evidence import EvidencePackError, load_pack, pack_summary
+from sao_toolkit.incident import analyze_incident
+from sao_toolkit.reporting import write_incident_outputs
 
 ROOT = Path(__file__).resolve().parent
 
@@ -115,9 +116,7 @@ def cmd_baselines(args: argparse.Namespace) -> int:
 
 
 def cmd_tests(_: argparse.Namespace) -> int:
-    return run(
-        [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"]
-    ).returncode
+    return run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"]).returncode
 
 
 def cmd_manifest(args: argparse.Namespace) -> int:
@@ -164,29 +163,14 @@ def cmd_score(args: argparse.Namespace) -> int:
 
 
 def cmd_score_cases(args: argparse.Namespace) -> int:
-    argv = [
-        "--cases",
-        args.cases,
-        "--predictions",
-        args.predictions,
-        "--require-cases",
-        str(args.require_cases),
-    ]
+    argv = ["--cases", args.cases, "--predictions", args.predictions, "--require-cases", str(args.require_cases)]
     if args.json:
         argv.append("--json")
     return python_script("evaluate_casefile.py", *argv).returncode
 
 
 def cmd_variants(args: argparse.Namespace) -> int:
-    return python_script(
-        "generate_variants.py",
-        "--seed",
-        args.seed,
-        "--per-template",
-        str(args.per_template),
-        "--output",
-        args.output,
-    ).returncode
+    return python_script("generate_variants.py", "--seed", args.seed, "--per-template", str(args.per_template), "--output", args.output).returncode
 
 
 def cmd_diff(args: argparse.Namespace) -> int:
@@ -207,98 +191,125 @@ def cmd_result_index(args: argparse.Namespace) -> int:
     return python_script("build_result_index.py", *argv).returncode
 
 
+def cmd_incident_validate(args: argparse.Namespace) -> int:
+    try:
+        pack = load_pack(args.pack)
+    except EvidencePackError as exc:
+        print(f"invalid Evidence Pack: {exc}", file=sys.stderr)
+        return 2
+    summary = pack_summary(pack)
+    if args.json:
+        print(json.dumps(summary, indent=2, sort_keys=True))
+    else:
+        print(f"Evidence Pack OK: {summary['incident_id']}")
+        for table, count in summary["rows"].items():
+            print(f"  {table}: {count} row(s)")
+    return 0
+
+
+def cmd_incident_analyze(args: argparse.Namespace) -> int:
+    try:
+        pack = load_pack(args.pack)
+    except EvidencePackError as exc:
+        print(f"invalid Evidence Pack: {exc}", file=sys.stderr)
+        return 2
+    report = analyze_incident(pack)
+    output = Path(args.output or (Path(args.pack) / "sao-output"))
+    json_path, md_path = write_incident_outputs(report, output)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print(f"SAO incident: {report['incident_id']}")
+        print(f"status: {report['status']}")
+        print(f"classification: {report['classification']}")
+        for finding in report.get("findings", []):
+            print(f"  - {finding}")
+        print(f"report: {md_path}")
+        print(f"json:   {json_path}")
+    return 0
+
+
+def cmd_demo(args: argparse.Namespace) -> int:
+    source = ROOT / "examples" / "evidence-packs" / "customer-replication-missing-event"
+    output = Path(args.output).resolve()
+    if output.exists() and any(output.iterdir()) and not args.force:
+        print(f"demo output directory is not empty: {output}; use --force to replace it", file=sys.stderr)
+        return 2
+    if output.exists() and args.force:
+        shutil.rmtree(output)
+    shutil.copytree(source, output)
+    pack = load_pack(output)
+    report = analyze_incident(pack)
+    json_path, md_path = write_incident_outputs(report, output / "sao-output")
+    print("SAO practical demo created and analyzed")
+    print(f"pack:   {output}")
+    print(f"result: {report['classification']}")
+    print(f"report: {md_path}")
+    print(f"json:   {json_path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="sao", description="SAP Agentic Operations assurance lab")
+    parser = argparse.ArgumentParser(prog="sao", description="SAP Agentic Operations — evidence-first SAP operations toolkit and assurance lab")
     sub = parser.add_subparsers(dest="command_name", required=True)
+
+    p = sub.add_parser("demo", help="copy and analyze a ready-to-run SAP replication evidence pack")
+    p.add_argument("--output", default="sao-demo")
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=cmd_demo)
+
+    incident = sub.add_parser("incident", help="validate or analyze a SAO Evidence Pack")
+    incident_sub = incident.add_subparsers(dest="incident_command", required=True)
+    p = incident_sub.add_parser("validate", help="validate Evidence Pack v0.1 structure")
+    p.add_argument("pack")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_incident_validate)
+    p = incident_sub.add_parser("analyze", help="build a deterministic cross-system incident diagnosis")
+    p.add_argument("pack")
+    p.add_argument("--output")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_incident_analyze)
 
     p = sub.add_parser("doctor", help="show project state and run lightweight integrity checks")
     p.set_defaults(func=cmd_doctor)
-
     p = sub.add_parser("validate", help="validate public state, enterprise context, corpus and experiment contracts")
     p.set_defaults(func=cmd_validate)
 
     p = sub.add_parser("context-check", help="run architecture fitness checks on an Enterprise Context Graph")
-    p.add_argument("context")
-    p.add_argument("--strict", action="store_true")
-    p.add_argument("--json", action="store_true")
+    p.add_argument("context"); p.add_argument("--strict", action="store_true"); p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_context_check)
-
     p = sub.add_parser("context-diff", help="diff two Enterprise Context Graph snapshots for architecture drift")
-    p.add_argument("before")
-    p.add_argument("after")
-    p.add_argument("--json", action="store_true")
-    p.add_argument("--fail-on-high-risk", action="store_true")
+    p.add_argument("before"); p.add_argument("after"); p.add_argument("--json", action="store_true"); p.add_argument("--fail-on-high-risk", action="store_true")
     p.set_defaults(func=cmd_context_diff)
 
     p = sub.add_parser("audit", help="audit SAO-Bench corpus structure and release-readiness warnings")
-    p.add_argument("--require-cases", type=int, default=50)
-    p.add_argument("--json", action="store_true")
-    p.add_argument("--output")
+    p.add_argument("--require-cases", type=int, default=50); p.add_argument("--json", action="store_true"); p.add_argument("--output")
     p.set_defaults(func=cmd_audit)
-
     p = sub.add_parser("self-test", help="run the reference benchmark self-test")
-    p.add_argument("--require-cases", type=int, default=50)
-    p.add_argument("--json", action="store_true")
+    p.add_argument("--require-cases", type=int, default=50); p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_self_test)
-
     p = sub.add_parser("baselines", help="profile deterministic benchmark control baselines")
-    p.add_argument("--output")
-    p.set_defaults(func=cmd_baselines)
-
-    p = sub.add_parser("tests", help="run stateful simulator and adapter safety tests")
-    p.set_defaults(func=cmd_tests)
-
+    p.add_argument("--output"); p.set_defaults(func=cmd_baselines)
+    p = sub.add_parser("tests", help="run stateful simulator and adapter safety tests"); p.set_defaults(func=cmd_tests)
     p = sub.add_parser("manifest", help="build a benchmark integrity manifest")
-    p.add_argument("--version", default="0.3-dev")
-    p.add_argument("--output")
-    p.set_defaults(func=cmd_manifest)
+    p.add_argument("--version", default="0.3-dev"); p.add_argument("--output"); p.set_defaults(func=cmd_manifest)
 
     p = sub.add_parser("run-adapter", help="run an external adapter over static or generated cases")
-    p.add_argument("--output", required=True)
-    p.add_argument("--timeout", type=float, default=60.0)
-    p.add_argument("--cases", help="optional generated/custom case JSONL")
-    p.add_argument("command", nargs=argparse.REMAINDER)
+    p.add_argument("--output", required=True); p.add_argument("--timeout", type=float, default=60.0); p.add_argument("--cases"); p.add_argument("command", nargs=argparse.REMAINDER)
     p.set_defaults(func=cmd_run_adapter)
-
     p = sub.add_parser("adapter-check", help="check transport/decision conformance of an adapter")
-    p.add_argument("--sample-cases", type=int, default=5)
-    p.add_argument("--timeout", type=float, default=30.0)
-    p.add_argument("--json", action="store_true")
-    p.add_argument("command", nargs=argparse.REMAINDER)
+    p.add_argument("--sample-cases", type=int, default=5); p.add_argument("--timeout", type=float, default=30.0); p.add_argument("--json", action="store_true"); p.add_argument("command", nargs=argparse.REMAINDER)
     p.set_defaults(func=cmd_adapter_check)
-
     p = sub.add_parser("score", help="score an existing prediction JSONL against static SAO-Bench")
-    p.add_argument("predictions")
-    p.add_argument("--require-cases", type=int, default=50)
-    p.add_argument("--json", action="store_true")
-    p.set_defaults(func=cmd_score)
-
+    p.add_argument("predictions"); p.add_argument("--require-cases", type=int, default=50); p.add_argument("--json", action="store_true"); p.set_defaults(func=cmd_score)
     p = sub.add_parser("score-cases", help="score predictions against generated/custom case JSONL")
-    p.add_argument("--cases", required=True)
-    p.add_argument("--predictions", required=True)
-    p.add_argument("--require-cases", type=int, default=1)
-    p.add_argument("--json", action="store_true")
-    p.set_defaults(func=cmd_score_cases)
-
+    p.add_argument("--cases", required=True); p.add_argument("--predictions", required=True); p.add_argument("--require-cases", type=int, default=1); p.add_argument("--json", action="store_true"); p.set_defaults(func=cmd_score_cases)
     p = sub.add_parser("variants", help="generate deterministic adversarial case variants")
-    p.add_argument("--seed", required=True)
-    p.add_argument("--per-template", type=int, default=3)
-    p.add_argument("--output", required=True)
-    p.set_defaults(func=cmd_variants)
-
+    p.add_argument("--seed", required=True); p.add_argument("--per-template", type=int, default=3); p.add_argument("--output", required=True); p.set_defaults(func=cmd_variants)
     p = sub.add_parser("diff", help="diff two SAO suite reports and surface regressions")
-    p.add_argument("before")
-    p.add_argument("after")
-    p.add_argument("--json", action="store_true")
-    p.add_argument("--fail-on-regression", action="store_true")
-    p.set_defaults(func=cmd_diff)
-
+    p.add_argument("before"); p.add_argument("after"); p.add_argument("--json", action="store_true"); p.add_argument("--fail-on-regression", action="store_true"); p.set_defaults(func=cmd_diff)
     p = sub.add_parser("result-index", help="build the public reproducible result ledger index")
-    p.add_argument("--manifest-dir")
-    p.add_argument("--output", default="results/index.json")
-    p.add_argument("--include-example-self-test", action="store_true")
-    p.set_defaults(func=cmd_result_index)
-
+    p.add_argument("--manifest-dir"); p.add_argument("--output", default="results/index.json"); p.add_argument("--include-example-self-test", action="store_true"); p.set_defaults(func=cmd_result_index)
     return parser
 
 
