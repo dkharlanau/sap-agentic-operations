@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/trace-event.schema.json",
+  "title": "SAO Control-Plane Trace Event",
+  "type": "object",
+  "required": ["trace_version", "run_id", "case_id", "seq", "event", "actor", "data"],
+  "properties": {
+    "trace_version": {"const": "0.1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "seq": {"type": "integer", "minimum": 1},
+    "event": {
+      "type": "string",
+      "enum": [
+        "intent_received",
+        "identity_resolved",
+        "evidence_observed",
+        "deterministic_check",
+        "policy_evaluated",
+        "reasoning_started",
+        "reasoning_completed",
+        "tool_requested",
+        "tool_result",
+        "memory_read",
+        "memory_write",
+        "recommendation_issued",
+        "approval_observed",
+        "write_requested",
+        "write_result",
+        "postcondition_checked",
+        "compensation_requested",
+        "compensation_result",
+        "decision_emitted"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "enum": ["user", "agent", "control-plane", "policy", "tool", "system-of-record", "human-approver", "memory", "simulator"]
+    },
+    "tick": {"type": ["integer", "null"], "minimum": 0},
+    "capability": {
+      "type": ["string", "null"],
+      "enum": ["read", "recommend", "approve", "execute", "admin", null]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "data": {"type": "object"}
+  },
+  "additionalProperties": false
+}
