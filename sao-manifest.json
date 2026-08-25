@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "0.1",
+  "project": "SAP Agentic Operations",
+  "shortName": "SAO",
+  "status": "experimental",
+  "version": "0.2-dev",
+  "maintainer": {
+    "name": "Dzmitryi Kharlanau",
+    "website": "https://dkharlanau.github.io/"
+  },
+  "purpose": "Framework-neutral conformance and evaluation lab for agents operating around enterprise systems of record using SAP-shaped synthetic operations.",
+  "surfaces": {
+    "controlPlane": "docs/CONTROL-PLANE.md",
+    "riskModel": "docs/RISK-MODEL.md",
+    "benchmark": "evals/cases.jsonl",
+    "benchmarkRunner": "scripts/evaluate.py",
+    "simulator": "simulator/engine.py",
+    "roadmap": "ROADMAP.md"
+  },
+  "schemas": {
+    "decision": "schemas/decision.schema.json",
+    "evidence": "schemas/evidence.schema.json",
+    "writeEnvelope": "schemas/write-envelope.schema.json"
+  },
+  "capabilities": [
+    "identity-resolution-gate",
+    "evidence-provenance",
+    "deterministic-policy-boundary",
+    "read-recommend-approve-execute",
+    "state-change-safety-envelope",
+    "abstention",
+    "idempotency",
+    "postcondition-verification",
+    "threat-class-evaluation",
+    "stateful-synthetic-simulation"
+  ],
+  "benchmark": {
+    "name": "SAO-Bench",
+    "caseCount": 15,
+    "riskTiers": ["R0", "R1", "R2", "R3", "R4"],
+    "threatClasses": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"]
+  },
+  "independence": "Independent open-source research project; not an official SAP project."
+}
