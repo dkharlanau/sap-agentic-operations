@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/result-index.schema.json",
+  "title": "SAO Result Ledger Index",
+  "type": "object",
+  "required": ["schema_version", "project", "entries"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "project": {"const": "SAP Agentic Operations"},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["experiment_id", "result_kind", "manifest", "benchmark", "runtime"],
+        "properties": {
+          "experiment_id": {"type": "string", "minLength": 3},
+          "result_kind": {
+            "type": "string",
+            "enum": ["reference_self_test", "runtime_evaluation", "simulator_experiment"]
+          },
+          "manifest": {"type": "string", "minLength": 1},
+          "created_at": {"type": ["string", "null"]},
+          "benchmark": {
+            "type": "object",
+            "required": ["version", "commit"],
+            "properties": {
+              "version": {"type": "string"},
+              "commit": {"type": "string"},
+              "case_count": {"type": ["integer", "null"]},
+              "corpus_sha256": {"type": ["string", "null"]},
+              "evaluator_sha256": {"type": ["string", "null"]}
+            },
+            "additionalProperties": false
+          },
+          "runtime": {
+            "type": "object",
+            "required": ["name", "version"],
+            "properties": {
+              "name": {"type": "string"},
+              "version": {"type": "string"},
+              "adapter": {"type": ["string", "null"]}
+            },
+            "additionalProperties": false
+          },
+          "model": {"type": ["object", "null"]},
+          "artifacts": {"type": "object"},
+          "notes": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "leaderboard_enabled": {"type": "boolean"},
+        "minimum_external_runtime_results_for_leaderboard": {"type": "integer", "minimum": 2}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
