@@ -35,10 +35,17 @@ jobs:
                   if line.strip():
                       json.loads(line)
               print('valid jsonl:', path)
+
+          for path in Path('simulator/fixtures').glob('*.json'):
+              json.loads(path.read_text(encoding='utf-8'))
+              print('valid fixture:', path)
           PY
 
       - name: Run benchmark self-test
         run: python scripts/evaluate.py --predictions evals/predictions.reference.jsonl
+
+      - name: Run stateful control-plane tests
+        run: python -m unittest discover -s tests -v
 
       - name: Emit machine-readable benchmark report
         run: python scripts/evaluate.py --predictions evals/predictions.reference.jsonl --json > benchmark-report.json
