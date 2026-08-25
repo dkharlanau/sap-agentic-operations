@@ -6,9 +6,10 @@ import sys
 from pathlib import Path
 
 from .demo import create_demo_pack, scenario_names
-from .evidence import EvidencePackError, load_pack, pack_summary
+from .evidence import EvidencePackError, create_empty_pack, load_pack, pack_summary
 from .incident import analyze_incident
 from .reporting import write_incident_outputs
+from .workbench import serve_workbench, write_workbench
 
 
 def cmd_demo(args: argparse.Namespace) -> int:
@@ -29,6 +30,29 @@ def cmd_demo(args: argparse.Namespace) -> int:
     print(f"result:   {report['classification']}")
     print(f"report:   {md_path}")
     print(f"json:     {json_path}")
+    return 0
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    try:
+        root = create_empty_pack(
+            args.output,
+            incident_id=args.incident_id,
+            kind=args.kind,
+            object_type=args.object_type,
+            source_id=args.source_id,
+            target_id=args.target_id,
+            authority_system=args.authority_system,
+            attribute=args.attribute,
+            force=args.force,
+        )
+    except EvidencePackError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    print(f"Evidence Pack template created: {root}")
+    print("Fill the CSV files, then run:")
+    print(f"  sao incident validate {root}")
+    print(f"  sao incident analyze {root}")
     return 0
 
 
@@ -70,6 +94,24 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_workbench(args: argparse.Namespace) -> int:
+    try:
+        if args.output:
+            target = write_workbench(args.pack, args.output)
+            print(f"SAO Workbench HTML: {target.resolve()}")
+            return 0
+        serve_workbench(
+            args.pack,
+            host=args.host,
+            port=args.port,
+            open_browser=not args.no_open,
+        )
+        return 0
+    except (EvidencePackError, OSError) as exc:
+        print(f"workbench error: {exc}", file=sys.stderr)
+        return 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="sao",
@@ -84,8 +126,20 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--list", action="store_true", help="list available scenarios")
     p.set_defaults(func=cmd_demo)
 
-    incident = sub.add_parser("incident", help="validate or analyze an Evidence Pack")
+    incident = sub.add_parser("incident", help="create, validate or analyze an Evidence Pack")
     incident_sub = incident.add_subparsers(dest="incident_command", required=True)
+
+    p = incident_sub.add_parser("init", help="create an empty Evidence Pack template")
+    p.add_argument("output")
+    p.add_argument("--incident-id", required=True)
+    p.add_argument("--kind", default="integration-incident")
+    p.add_argument("--object-type", default="business-object")
+    p.add_argument("--source-id", default="SOURCE-ID")
+    p.add_argument("--target-id", default="TARGET-ID")
+    p.add_argument("--authority-system", default="AUTHORITATIVE-SYSTEM")
+    p.add_argument("--attribute", default="attribute")
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=cmd_init)
 
     p = incident_sub.add_parser("validate", help="validate Evidence Pack v0.1")
     p.add_argument("pack")
@@ -97,6 +151,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_analyze)
+
+    p = sub.add_parser("workbench", help="view an Evidence Pack as a local read-only incident workbench")
+    p.add_argument("pack")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8765)
+    p.add_argument("--no-open", action="store_true")
+    p.add_argument("--output", help="write a static HTML report instead of starting a local server")
+    p.set_defaults(func=cmd_workbench)
     return parser
 
 
