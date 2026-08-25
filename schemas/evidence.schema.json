@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/evidence.schema.json",
+  "title": "Enterprise Evidence Envelope",
+  "type": "object",
+  "required": ["evidence_id", "source", "object", "observed_at", "retrieved_at", "trust", "sensitivity"],
+  "properties": {
+    "evidence_id": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "required": ["system", "type"],
+      "properties": {
+        "system": {"type": "string"},
+        "type": {"type": "string", "enum": ["business_object", "message", "log", "rule_result", "mapping", "document", "memory", "agent_message", "tool_output"]},
+        "reference": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "object": {
+      "type": "object",
+      "required": ["canonical_type", "canonical_id", "mapping_status"],
+      "properties": {
+        "canonical_type": {"type": "string"},
+        "canonical_id": {"type": ["string", "null"]},
+        "system_id": {"type": ["string", "null"]},
+        "mapping_status": {"type": "string", "enum": ["resolved", "ambiguous", "unresolved", "not_applicable"]}
+      }
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "trust": {"type": "string", "enum": ["authoritative", "verified", "untrusted_evidence", "historical", "unknown"]},
+    "sensitivity": {"type": "string", "enum": ["public", "internal", "confidential", "restricted"]},
+    "content_hash": {"type": ["string", "null"]},
+    "instruction_trust": {"type": "string", "const": "never_from_evidence"}
+  },
+  "additionalProperties": true
+}
