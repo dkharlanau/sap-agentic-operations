@@ -9,6 +9,11 @@ from .batch import analyze_batch, write_batch_outputs
 from .demo import create_demo_pack, scenario_names
 from .evidence import EvidencePackError, create_empty_pack, load_pack, pack_summary
 from .incident import analyze_incident
+from .reconciliation import (
+    analyze_reconciliation,
+    create_reconciliation_demo,
+    write_reconciliation_outputs,
+)
 from .reporting import write_incident_outputs
 from .workbench import serve_workbench, write_workbench
 
@@ -112,6 +117,44 @@ def cmd_batch(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_reconcile_demo(args: argparse.Namespace) -> int:
+    try:
+        root = create_reconciliation_demo(args.output, force=args.force)
+        report = analyze_reconciliation(root)
+    except EvidencePackError as exc:
+        print(f"reconciliation error: {exc}", file=sys.stderr)
+        return 2
+    outputs = write_reconciliation_outputs(report, root / "sao-output")
+    print("SAO semantic reconciliation demo created")
+    print(f"pack: {root}")
+    print(f"checks: {report['checks']}; aligned: {report['aligned']}; attention: {report['needs_attention']}")
+    for classification, count in report["by_classification"].items():
+        print(f"  {classification}: {count}")
+    print(f"report: {outputs['markdown']}")
+    return 0
+
+
+def cmd_reconcile_analyze(args: argparse.Namespace) -> int:
+    try:
+        report = analyze_reconciliation(args.pack)
+    except EvidencePackError as exc:
+        print(f"reconciliation error: {exc}", file=sys.stderr)
+        return 2
+    output = Path(args.output or (Path(args.pack) / "sao-output"))
+    outputs = write_reconciliation_outputs(report, output)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print(f"SAO reconciliation: {report['reconciliation_id']}")
+        print(f"checks: {report['checks']}; aligned: {report['aligned']}; attention: {report['needs_attention']}")
+        for classification, count in report["by_classification"].items():
+            print(f"  {classification}: {count}")
+        print(f"csv:      {outputs['csv']}")
+        print(f"markdown: {outputs['markdown']}")
+        print(f"json:     {outputs['json']}")
+    return 0
+
+
 def cmd_workbench(args: argparse.Namespace) -> int:
     try:
         if args.output:
@@ -175,6 +218,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output", default="sao-batch-output")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_batch)
+
+    reconcile = sub.add_parser("reconcile", help="semantic master-data reconciliation using identity, authority and freshness")
+    reconcile_sub = reconcile.add_subparsers(dest="reconcile_command", required=True)
+    p = reconcile_sub.add_parser("demo", help="create and run a ready-to-use semantic reconciliation example")
+    p.add_argument("--output", default="sao-reconcile-demo")
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=cmd_reconcile_demo)
+    p = reconcile_sub.add_parser("analyze", help="analyze a reconciliation pack")
+    p.add_argument("pack")
+    p.add_argument("--output")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_reconcile_analyze)
 
     p = sub.add_parser("workbench", help="view an Evidence Pack as a local read-only incident workbench")
     p.add_argument("pack")
