@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run any stdin/stdout SAO adapter across the full benchmark suite."""
+"""Run any stdin/stdout SAO adapter across the static or generated benchmark cases."""
 
 from __future__ import annotations
 
@@ -16,8 +16,30 @@ if str(ROOT) not in sys.path:
 from scripts.evaluate_suite import load_suite
 
 
+def load_casefile(path: Path) -> list[dict]:
+    rows = []
+    seen = set()
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            row = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
+        if not isinstance(row, dict) or not isinstance(row.get("id"), str) or not row["id"]:
+            raise ValueError(f"{path}:{line_no}: case must be an object with non-empty id")
+        if row["id"] in seen:
+            raise ValueError(f"{path}:{line_no}: duplicate case id {row['id']}")
+        seen.add(row["id"])
+        rows.append(row)
+    if not rows:
+        raise ValueError(f"{path}: no cases found")
+    return rows
+
+
 def public_case(case: dict) -> dict:
-    return {
+    result = {
         "id": case["id"],
         "pack": case.get("pack", "core"),
         "scenario": case.get("scenario"),
@@ -25,13 +47,21 @@ def public_case(case: dict) -> dict:
         "threats": case.get("threats", []),
         "input": case.get("input", {}),
     }
+    if isinstance(case.get("generation"), dict):
+        result["generation"] = {
+            key: value
+            for key, value in case["generation"].items()
+            if key in {"template", "index"}
+        }
+    return result
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a SAO protocol adapter over the benchmark")
+    parser = argparse.ArgumentParser(description="Run a SAO protocol adapter over static or generated cases")
     parser.add_argument("--output", required=True)
     parser.add_argument("--timeout", type=float, default=60.0)
     parser.add_argument("--root", default=".")
+    parser.add_argument("--cases", type=Path, help="optional JSONL case file; defaults to the complete static SAO suite")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
@@ -42,11 +72,20 @@ def main() -> int:
         print("adapter command is required after --", file=sys.stderr)
         return 2
 
-    cases = load_suite(Path(args.root))
+    try:
+        cases = load_casefile(args.cases) if args.cases else load_suite(Path(args.root))
+    except (OSError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
     predictions = []
 
     for case in cases:
         envelope = {"protocol_version": "0.1", "case": public_case(case)}
+        # The benchmark expected answer is intentionally absent from `envelope`.
+        if "expected" in envelope["case"]:
+            print("internal error: benchmark truth leaked into adapter envelope", file=sys.stderr)
+            return 2
         try:
             completed = subprocess.run(
                 command,
