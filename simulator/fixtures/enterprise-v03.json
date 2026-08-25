@@ -1,0 +1,50 @@
+{
+  "clock": 100,
+  "identity_version": 3,
+  "objects": {
+    "order-100": {
+      "canonical_type": "sales_order",
+      "canonical_id": "order-100",
+      "version": 4,
+      "attributes": {
+        "business_block": true,
+        "payment_terms": "0001",
+        "incompletion": false,
+        "credit_check": "pass"
+      }
+    },
+    "bp-200": {
+      "canonical_type": "business_partner",
+      "canonical_id": "bp-200",
+      "version": 2,
+      "attributes": {
+        "payment_terms": "0001",
+        "business_block": false
+      }
+    }
+  },
+  "identity": {
+    "order-100": {
+      "synthetic-s4": "SO-100",
+      "synthetic-legacy": "ORD-900"
+    },
+    "bp-200": {
+      "synthetic-mdg": "BP-200",
+      "synthetic-s4": "BP-9200"
+    }
+  },
+  "policies": {
+    "policy://release-block/r3": {
+      "result": "require_approval",
+      "version": 1
+    },
+    "policy://payment-terms/r3": {
+      "result": "require_approval",
+      "version": 1
+    },
+    "policy://compensation": {
+      "result": "require_approval",
+      "version": 1
+    }
+  }
+}
