@@ -28,6 +28,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     manifest = json.loads((ROOT / "sao-manifest.json").read_text(encoding="utf-8"))
     checks = [
         ("project public state", python_script("validate_project_state.py", capture=True)),
+        ("enterprise context", python_script("check_enterprise_context.py", "examples/enterprise-context/customer-replication.json", "--strict", capture=True)),
         ("suite contracts", python_script("validate_suite_contracts.py", capture=True)),
         ("corpus audit", python_script("audit_corpus.py", "--require-cases", "50", capture=True)),
         ("experiment provenance", python_script("validate_experiments.py", capture=True)),
@@ -54,6 +55,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 def cmd_validate(_: argparse.Namespace) -> int:
     checks = [
         ("validate_project_state.py", []),
+        ("check_enterprise_context.py", ["examples/enterprise-context/customer-replication.json", "--strict"]),
         ("validate_suite_contracts.py", []),
         ("audit_corpus.py", ["--require-cases", "50"]),
         ("validate_experiments.py", []),
@@ -63,6 +65,15 @@ def cmd_validate(_: argparse.Namespace) -> int:
         if result.returncode:
             return result.returncode
     return 0
+
+
+def cmd_context_check(args: argparse.Namespace) -> int:
+    argv = [args.context]
+    if args.strict:
+        argv.append("--strict")
+    if args.json:
+        argv.append("--json")
+    return python_script("check_enterprise_context.py", *argv).returncode
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -194,8 +205,14 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("doctor", help="show project state and run lightweight integrity checks")
     p.set_defaults(func=cmd_doctor)
 
-    p = sub.add_parser("validate", help="validate public state, corpus and experiment contracts")
+    p = sub.add_parser("validate", help="validate public state, enterprise context, corpus and experiment contracts")
     p.set_defaults(func=cmd_validate)
+
+    p = sub.add_parser("context-check", help="run architecture fitness checks on an Enterprise Context Graph")
+    p.add_argument("context")
+    p.add_argument("--strict", action="store_true")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_context_check)
 
     p = sub.add_parser("audit", help="audit SAO-Bench corpus structure and release-readiness warnings")
     p.add_argument("--require-cases", type=int, default=50)
