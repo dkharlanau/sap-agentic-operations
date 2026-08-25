@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/evidence-pack.schema.json",
+  "title": "SAO Evidence Pack v0.1 Manifest",
+  "type": "object",
+  "required": ["format", "version", "incident_id", "kind", "object", "authority", "files"],
+  "properties": {
+    "format": {"const": "sao-evidence-pack"},
+    "version": {"const": "0.1"},
+    "incident_id": {"type": "string", "minLength": 1},
+    "kind": {"type": "string", "minLength": 1},
+    "object": {
+      "type": "object",
+      "required": ["type", "source_id"],
+      "properties": {
+        "type": {"type": "string", "minLength": 1},
+        "source_id": {"type": "string", "minLength": 1},
+        "target_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "authority": {
+      "type": "object",
+      "required": ["system"],
+      "properties": {
+        "system": {"type": "string", "minLength": 1},
+        "attribute": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "files": {
+      "type": "object",
+      "required": ["source_changes", "messages", "target_state", "identity_map"],
+      "properties": {
+        "source_changes": {"type": "string", "minLength": 1},
+        "messages": {"type": "string", "minLength": 1},
+        "target_state": {"type": "string", "minLength": 1},
+        "identity_map": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "recovery": {
+      "type": "object",
+      "properties": {
+        "regeneration_supported": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "resolution_condition": {"type": ["string", "null"]}
+  },
+  "additionalProperties": true
+}
