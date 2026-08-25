@@ -76,6 +76,15 @@ def cmd_context_check(args: argparse.Namespace) -> int:
     return python_script("check_enterprise_context.py", *argv).returncode
 
 
+def cmd_context_diff(args: argparse.Namespace) -> int:
+    argv = [args.before, args.after]
+    if args.json:
+        argv.append("--json")
+    if args.fail_on_high_risk:
+        argv.append("--fail-on-high-risk")
+    return python_script("diff_enterprise_context.py", *argv).returncode
+
+
 def cmd_audit(args: argparse.Namespace) -> int:
     argv = ["--require-cases", str(args.require_cases)]
     if args.json:
@@ -213,6 +222,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--strict", action="store_true")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_context_check)
+
+    p = sub.add_parser("context-diff", help="diff two Enterprise Context Graph snapshots for architecture drift")
+    p.add_argument("before")
+    p.add_argument("after")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--fail-on-high-risk", action="store_true")
+    p.set_defaults(func=cmd_context_diff)
 
     p = sub.add_parser("audit", help="audit SAO-Bench corpus structure and release-readiness warnings")
     p.add_argument("--require-cases", type=int, default=50)
