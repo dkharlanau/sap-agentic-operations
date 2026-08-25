@@ -68,14 +68,33 @@ jobs:
       - name: Emit suite report
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50 --json > sao-suite-report.json
 
+      - name: Emit positive trace report
+        run: python scripts/evaluate_trace.py traces/examples/valid-approved-write.jsonl --json > sao-trace-report.json
+
+      - name: Emit bounded harness assurance case
+        run: |
+          python scripts/build_assurance_case.py \
+            --benchmark-report sao-suite-report.json \
+            --benchmark-report-ref artifact://sao-suite-report.json \
+            --trace-report sao-trace-report.json \
+            --trace-report-ref artifact://sao-trace-report.json \
+            --subject-kind harness \
+            --subject-name "SAO reference harness" \
+            --subject-version 0.3-dev \
+            --assurance-case-id sao-harness-v03 \
+            --output sao-assurance-case.json
+          python scripts/validate_assurance_case.py sao-assurance-case.json
+
       - name: Emit benchmark integrity manifest
         run: python scripts/build_release_manifest.py --version 0.3-dev --output sao-release-manifest.json
 
-      - name: Upload suite evidence
+      - name: Upload suite evidence bundle
         uses: actions/upload-artifact@v4
         with:
           name: sao-full-suite-report
           path: |
             sao-suite-report.json
+            sao-trace-report.json
+            sao-assurance-case.json
             sao-baseline-profiles.json
             sao-release-manifest.json
