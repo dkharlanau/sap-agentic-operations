@@ -120,3 +120,67 @@ def pack_summary(pack: EvidencePack) -> dict[str, Any]:
         "authority_system": pack.manifest.get("authority", {}).get("system"),
         "rows": {name: len(rows) for name, rows in pack.tables.items()},
     }
+
+
+def create_empty_pack(
+    root: str | Path,
+    *,
+    incident_id: str,
+    kind: str = "integration-incident",
+    object_type: str = "business-object",
+    source_id: str = "SOURCE-ID",
+    target_id: str = "TARGET-ID",
+    authority_system: str = "AUTHORITATIVE-SYSTEM",
+    attribute: str = "attribute",
+    force: bool = False,
+) -> Path:
+    root_path = Path(root).resolve()
+    if root_path.exists() and any(root_path.iterdir()) and not force:
+        raise EvidencePackError(
+            f"output directory is not empty: {root_path}; use --force to replace it"
+        )
+    if root_path.exists() and force:
+        import shutil
+
+        shutil.rmtree(root_path)
+    root_path.mkdir(parents=True, exist_ok=True)
+
+    files = {
+        "source_changes": "source_changes.csv",
+        "messages": "messages.csv",
+        "target_state": "target_state.csv",
+        "identity_map": "identity_map.csv",
+    }
+    manifest = {
+        "format": "sao-evidence-pack",
+        "version": PACK_VERSION,
+        "incident_id": incident_id,
+        "kind": kind,
+        "object": {
+            "type": object_type,
+            "source_id": source_id,
+            "target_id": target_id,
+        },
+        "authority": {
+            "system": authority_system,
+            "attribute": attribute,
+        },
+        "files": files,
+        "resolution_condition": "Define the business state that must be observed before this incident can be called resolved.",
+    }
+    (root_path / "incident.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
+    for logical_name, columns in REQUIRED_TABLES.items():
+        with (root_path / files[logical_name]).open(
+            "w", encoding="utf-8", newline=""
+        ) as handle:
+            writer = csv.writer(handle)
+            writer.writerow(columns)
+    (root_path / "README.txt").write_text(
+        "Fill the CSV files with exported evidence, then run:\n"
+        "  sao incident validate .\n"
+        "  sao incident analyze .\n",
+        encoding="utf-8",
+    )
+    return root_path
