@@ -1,26 +1,40 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "project": "SAP Agentic Operations",
   "shortName": "SAO",
   "status": "experimental",
-  "version": "0.2-dev",
+  "version": "0.3-dev",
   "maintainer": {
     "name": "Dzmitryi Kharlanau",
-    "website": "https://dkharlanau.github.io/"
+    "website": "https://dkharlanau.github.io/",
+    "github": "https://github.com/dkharlanau"
   },
-  "purpose": "Framework-neutral conformance and evaluation lab for agents operating around enterprise systems of record using SAP-shaped synthetic operations.",
+  "purpose": "Vendor-neutral pre-production assurance lab for AI agents operating around SAP and enterprise systems of record using SAP-shaped synthetic operations.",
   "surfaces": {
     "controlPlane": "docs/CONTROL-PLANE.md",
     "riskModel": "docs/RISK-MODEL.md",
-    "benchmark": "evals/cases.jsonl",
-    "benchmarkRunner": "scripts/evaluate.py",
-    "simulator": "simulator/engine.py",
+    "conformance": "docs/CONFORMANCE.md",
+    "architectureDecisions": "docs/adr/README.md",
+    "benchmarkCore": "evals/cases.jsonl",
+    "benchmarkPacks": "evals/packs/",
+    "benchmarkRunner": "scripts/evaluate_suite.py",
+    "benchmarkValidator": "scripts/validate_suite_contracts.py",
+    "baselines": "baselines/",
+    "adapterProtocol": "adapters/README.md",
+    "adapterRunner": "scripts/run_adapter.py",
+    "httpAdapter": "adapters/http_endpoint.py",
+    "simulator": "simulator/v03.py",
+    "experimentProtocol": "experiments/README.md",
+    "experimentSchema": "schemas/experiment.schema.json",
+    "releaseVersioning": "BENCHMARK_VERSIONING.md",
+    "releaseManifestBuilder": "scripts/build_release_manifest.py",
     "roadmap": "ROADMAP.md"
   },
   "schemas": {
     "decision": "schemas/decision.schema.json",
     "evidence": "schemas/evidence.schema.json",
-    "writeEnvelope": "schemas/write-envelope.schema.json"
+    "writeEnvelope": "schemas/write-envelope.schema.json",
+    "experiment": "schemas/experiment.schema.json"
   },
   "capabilities": [
     "identity-resolution-gate",
@@ -28,17 +42,45 @@
     "deterministic-policy-boundary",
     "read-recommend-approve-execute",
     "state-change-safety-envelope",
-    "abstention",
-    "idempotency",
+    "explicit-abstention",
+    "runtime-policy-drift",
+    "approval-scope-and-expiry",
+    "before-state-binding",
+    "idempotency-and-collision-detection",
     "postcondition-verification",
+    "governed-compensation",
+    "tool-output-trust-boundary",
+    "memory-trust-and-staleness",
     "threat-class-evaluation",
-    "stateful-synthetic-simulation"
+    "stateful-synthetic-simulation",
+    "fault-injection",
+    "runtime-neutral-adapters",
+    "reproducible-experiment-provenance",
+    "benchmark-integrity-manifests"
   ],
   "benchmark": {
     "name": "SAO-Bench",
-    "caseCount": 15,
+    "version": "0.3-dev",
+    "caseCount": 51,
+    "packs": {
+      "core": 15,
+      "integration-operations": 7,
+      "master-data": 7,
+      "business-process": 7,
+      "agent-security": 7,
+      "state-change": 8
+    },
     "riskTiers": ["R0", "R1", "R2", "R3", "R4"],
-    "threatClasses": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"]
+    "threatClasses": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"],
+    "frozen": false,
+    "resultRequirement": "Development results must include exact Git commit and experiment provenance."
   },
-  "independence": "Independent open-source research project; not an official SAP project."
+  "simulator": {
+    "name": "Synthetic Enterprise Lab",
+    "version": "0.3-dev",
+    "sapEmulator": false,
+    "stateful": true,
+    "faultInjection": true
+  },
+  "independence": "Independent open-source research project; not an official SAP project, certification, or production-safety guarantee."
 }
