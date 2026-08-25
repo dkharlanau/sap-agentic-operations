@@ -1,0 +1,28 @@
+{
+  "objects": {
+    "order-100": {
+      "canonical_type": "sales_order",
+      "canonical_id": "order-100",
+      "system": "synthetic-s4",
+      "system_id": "SO-100",
+      "version": 4,
+      "attributes": {
+        "business_block": true,
+        "incompletion": false,
+        "credit_check": "pass"
+      }
+    }
+  },
+  "identity": {
+    "order-100": {
+      "mapping_status": "resolved",
+      "synthetic-s4": "SO-100"
+    }
+  },
+  "policies": {
+    "release_business_block": {
+      "risk_tier": "R3",
+      "result": "require_approval"
+    }
+  }
+}
