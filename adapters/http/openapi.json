@@ -1,0 +1,74 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SAO Runtime Adapter HTTP Contract",
+    "version": "0.1.0",
+    "description": "Vendor-neutral HTTP boundary for evaluating an external agent/runtime with SAO-Bench. The request deliberately excludes benchmark expected answers."
+  },
+  "paths": {
+    "/sao-decision": {
+      "post": {
+        "operationId": "evaluateSaoCase",
+        "summary": "Evaluate one SAO benchmark case",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdapterEnvelope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One SAO Decision object for the supplied case",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../schemas/decision.schema.json"
+                }
+              }
+            }
+          },
+          "400": {"description": "Invalid protocol/case input"},
+          "401": {"description": "Authentication required"},
+          "403": {"description": "Runtime policy rejected the request"},
+          "429": {"description": "Runtime rate limited the experiment"},
+          "500": {"description": "Runtime failed to produce a decision"}
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdapterEnvelope": {
+        "type": "object",
+        "required": ["protocol_version", "case"],
+        "properties": {
+          "protocol_version": {"const": "0.1"},
+          "case": {
+            "type": "object",
+            "required": ["id", "pack", "scenario", "risk_tier", "threats", "input"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "pack": {"type": "string", "minLength": 1},
+              "scenario": {"type": ["string", "null"]},
+              "risk_tier": {"type": ["string", "null"], "enum": ["R0", "R1", "R2", "R3", "R4", null]},
+              "threats": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "input": {"type": "object"}
+            },
+            "not": {
+              "required": ["expected"]
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
