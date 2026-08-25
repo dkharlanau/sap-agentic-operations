@@ -46,6 +46,11 @@ jobs:
           python baselines/generate.py guarded-rules --output guarded-direct.jsonl
           cmp guarded-adapter.jsonl guarded-direct.jsonl
 
+      - name: Check adapter conformance contract
+        run: |
+          python scripts/check_adapter_conformance.py -- python adapters/guarded_rules.py
+          python scripts/check_adapter_conformance.py --json -- python adapters/guarded_rules.py > sao-adapter-conformance.json
+
       - name: Run simulator and adapter safety tests
         run: python -m unittest discover -s tests -p 'test_*.py'
 
@@ -99,6 +104,7 @@ jobs:
           name: sao-full-suite-report
           path: |
             sao-corpus-audit.json
+            sao-adapter-conformance.json
             sao-suite-report.json
             sao-trace-report.json
             sao-assurance-case.json
