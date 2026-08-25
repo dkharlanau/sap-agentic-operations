@@ -95,6 +95,15 @@ jobs:
             --output sao-assurance-case.json
           python scripts/validate_assurance_case.py sao-assurance-case.json
 
+      - name: Emit human-readable assurance review
+        run: |
+          python scripts/build_review_report.py \
+            --benchmark-report sao-suite-report.json \
+            --corpus-audit sao-corpus-audit.json \
+            --adapter-conformance sao-adapter-conformance.json \
+            --trace-report sao-trace-report.json \
+            --output sao-assurance-review.md
+
       - name: Emit benchmark integrity manifest
         run: python scripts/build_release_manifest.py --version 0.3-dev --output sao-release-manifest.json
 
@@ -108,5 +117,6 @@ jobs:
             sao-suite-report.json
             sao-trace-report.json
             sao-assurance-case.json
+            sao-assurance-review.md
             sao-baseline-profiles.json
             sao-release-manifest.json
