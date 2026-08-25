@@ -68,12 +68,24 @@ def main() -> int:
         "write-envelope.schema.json",
         "experiment.schema.json",
         "trace-event.schema.json",
+        "assurance-case.schema.json",
     ):
         path = ROOT / "schemas" / schema
         try:
             json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             fail(errors, f"invalid schema {schema}: {exc}")
+
+    required_surfaces = [
+        ROOT / "docs" / "CONTROL-PLANE.md",
+        ROOT / "docs" / "ASSURANCE-CASE.md",
+        ROOT / "traces" / "README.md",
+        ROOT / "adapters" / "README.md",
+        ROOT / "experiments" / "README.md",
+    ]
+    for path in required_surfaces:
+        if not path.exists():
+            fail(errors, f"required public surface missing: {path.relative_to(ROOT)}")
 
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     if f"SAO-Bench v{benchmark.get('version')}" not in readme:
