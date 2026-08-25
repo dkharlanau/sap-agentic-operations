@@ -126,7 +126,6 @@ An implementation should be evaluated on questions such as:
 - [`scenarios/`](scenarios/) — synthetic SAP / enterprise operational cases
 - [`evals/`](evals/) — machine-readable evaluation cases
 - [`research/`](research/) — source-backed research notes and evidence policy
-- [`docs/`](docs/) — principles and terminology
 
 ## Design principles
 
@@ -141,9 +140,21 @@ An implementation should be evaluated on questions such as:
 9. **Audit the decision, not only the API call.** Preserve what evidence led to the action.
 10. **Synthetic public examples only.** Enterprise learning must not leak enterprise data.
 
-## Status
+## v0.1 baseline
 
-Early public reference project. The initial target is a small, high-quality set of patterns and evals rather than a broad framework.
+The initial reference baseline now includes:
+
+- one enterprise-agent reference architecture;
+- a deterministic-vs-agentic decision matrix;
+- a Read → Recommend → Approve → Execute capability model;
+- three synthetic SAP operational scenarios;
+- machine-readable eval cases;
+- explicit abstention and escalation criteria;
+- security and authorization boundaries;
+- research/evidence policy;
+- citation metadata and Apache-2.0 licensing.
+
+The next phase should deepen evidence and executable evaluation rather than broaden the repository with generic agent features.
 
 ## Author
 
