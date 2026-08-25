@@ -23,6 +23,11 @@ jobs:
       - name: Validate project public state
         run: python scripts/validate_project_state.py
 
+      - name: Validate enterprise architecture context fitness
+        run: |
+          python scripts/check_enterprise_context.py examples/enterprise-context/customer-replication.json --strict
+          python scripts/check_enterprise_context.py examples/enterprise-context/customer-replication.json --strict --json > sao-enterprise-context-fitness.json
+
       - name: Validate benchmark contracts and coverage
         run: python scripts/validate_suite_contracts.py
 
@@ -122,6 +127,7 @@ jobs:
         with:
           name: sao-full-suite-report
           path: |
+            sao-enterprise-context-fitness.json
             sao-corpus-audit.json
             sao-adapter-conformance.json
             sao-suite-report.json
