@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SAP Agentic Operations (SAO) is an executable assurance lab for AI agents operating around SAP-shaped enterprise systems of record.">
+  <meta name="theme-color" content="#0b0d10">
+  <link rel="canonical" href="https://dkharlanau.github.io/sap-agentic-operations/">
+  <title>SAO — SAP Agentic Operations</title>
+  <style>
+    :root{--bg:#090b0d;--panel:#101419;--panel2:#151a20;--text:#f1f4f7;--muted:#9aa7b4;--line:#28313a;--accent:#d6ff55;--danger:#ff7a7a;--max:1180px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}a:hover{color:var(--accent)}code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.shell{width:min(var(--max),calc(100% - 40px));margin:auto}.topbar{position:sticky;top:0;z-index:10;background:rgba(9,11,13,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:14px max(20px,calc((100vw - var(--max))/2))}.brand{font-weight:800;letter-spacing:.05em}.brand span{color:var(--accent)}nav{display:flex;gap:18px;align-items:center;font-size:14px;color:var(--muted)}.cta{border:1px solid var(--line);padding:8px 11px;border-radius:8px;color:var(--text)}.hero{padding:90px 0 68px;display:grid;grid-template-columns:1.2fr .8fr;gap:54px;align-items:end}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--accent);font-weight:700}.hero h1{font-size:clamp(50px,7vw,92px);line-height:.92;letter-spacing:-.055em;margin:14px 0 24px;max-width:850px}.lead{font-size:21px;color:#c7d0d8;max-width:780px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.button{padding:12px 15px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font-weight:650}.button.primary{background:var(--accent);color:#111;border-color:var(--accent)}.scorecard{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:24px}.scorecard .big{font-size:64px;font-weight:850;letter-spacing:-.05em;line-height:1}.scorecard p{color:var(--muted);margin:8px 0 0}.metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}.metric{background:var(--panel);padding:24px}.metric strong{display:block;font-size:34px;letter-spacing:-.04em}.metric span{color:var(--muted);font-size:14px}.section{padding:76px 0;border-top:1px solid var(--line)}.section-head{display:grid;grid-template-columns:.7fr 1.3fr;gap:40px;margin-bottom:34px}.section h2{font-size:clamp(34px,5vw,60px);line-height:1;letter-spacing:-.045em;margin:0}.section-copy{color:var(--muted);font-size:18px;max-width:700px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}.card h3{margin:5px 0 8px;font-size:19px}.card p{margin:0;color:var(--muted)}.tag{font-size:11px;letter-spacing:.1em;color:var(--accent);font-weight:750}.flow{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;overflow:auto}.flow pre{margin:0;color:#d8e0e7;line-height:1.45}.baseline{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.baseline th,.baseline td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line)}.baseline th{color:var(--muted);font-size:13px;font-weight:600}.baseline td:nth-child(n+2),.baseline th:nth-child(n+2){text-align:right}.unsafe{color:var(--danger);font-weight:800}.trybox{background:var(--accent);color:#0d1104;border-radius:18px;padding:34px}.trybox h2{color:#0d1104}.trybox p{max-width:700px}.trybox pre{background:#0a0d07;color:#eef8da;padding:20px;border-radius:12px;overflow:auto}.footer{padding:40px 0 64px;color:var(--muted);display:flex;justify-content:space-between;gap:24px;border-top:1px solid var(--line);font-size:14px}@media(max-width:850px){nav a:not(.cta){display:none}.hero,.section-head{grid-template-columns:1fr}.grid,.metric-row{grid-template-columns:1fr}.hero{padding-top:58px}.scorecard{max-width:400px}.footer{flex-direction:column}}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#top"><span>SAO/</span> SAP Agentic Operations</a>
+  <nav aria-label="Primary navigation">
+    <a href="#why">Why</a><a href="#bench">Benchmark</a><a href="#controls">Controls</a><a href="#try">Try it</a>
+    <a class="cta" href="https://github.com/dkharlanau/sap-agentic-operations">GitHub</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="shell hero">
+    <div>
+      <p class="eyebrow">Executable assurance lab · experimental v0.3-dev</p>
+      <h1>Can an enterprise agent prove it is safe to act?</h1>
+      <p class="lead">SAO tests whether an AI agent can distinguish reading, reasoning, approval, execution, abstention and verification around SAP-shaped enterprise systems of record.</p>
+      <div class="actions">
+        <a class="button primary" href="#try">Run the lab</a>
+        <a class="button" href="https://github.com/dkharlanau/sap-agentic-operations/blob/main/docs/CONTROL-PLANE.md">Control plane</a>
+        <a class="button" href="https://github.com/dkharlanau/sap-agentic-operations">Repository</a>
+      </div>
+    </div>
+    <aside class="scorecard" aria-label="Current benchmark size">
+      <div class="big">51</div>
+      <p>reviewed synthetic enterprise-control cases across core and specialist packs.</p>
+    </aside>
+  </section>
+
+  <section class="shell metric-row" aria-label="SAO benchmark summary">
+    <div class="metric"><strong>R0–R4</strong><span>business-impact tiers</span></div>
+    <div class="metric"><strong>T1–T10</strong><span>failure / threat classes</span></div>
+    <div class="metric"><strong>0</strong><span>SAP tenants or client datasets required</span></div>
+  </section>
+
+  <section id="why" class="section shell">
+    <div class="section-head">
+      <p class="eyebrow">The question behind SAO</p>
+      <div><h2>Tool calling is not enterprise readiness.</h2><p class="section-copy">A technically successful call can still be the wrong business action. SAO focuses on evidence, authority, current state, approvals, postconditions, provenance and recovery rather than a demo that merely reaches an API.</p></div>
+    </div>
+    <div class="flow"><pre><code>Agent runtime
+     ↓
+Decision contract
+     ↓
+identity · evidence · policy · risk · approval · trust
+     ↓
+recommend / abstain / execute
+     ↓
+state-change envelope
+     ↓
+narrow typed tool → system of record
+     ↓
+verify business outcome → audit → recover</code></pre></div>
+  </section>
+
+  <section id="bench" class="section shell">
+    <div class="section-head">
+      <p class="eyebrow">SAO-Bench</p>
+      <div><h2>Failure cases shaped like real enterprise operations.</h2><p class="section-copy">The corpus separates business impact from the mechanism of agent failure, and makes forbidden actions and execution gates explicit.</p></div>
+    </div>
+    <div class="grid">
+      <article class="card"><span class="tag">CORE · 15</span><h3>Authority & evidence</h3><p>Causality, evidence quality, approvals, abstention and business authority.</p></article>
+      <article class="card"><span class="tag">INTEGRATION · 7</span><h3>Message operations</h3><p>Replay, ordering, mapping drift, retry ambiguity and business acknowledgement.</p></article>
+      <article class="card"><span class="tag">MDG · 7</span><h3>Master data</h3><p>Canonical identity, source-of-truth ownership, mapping and governance versions.</p></article>
+      <article class="card"><span class="tag">PROCESS · 7</span><h3>Business process</h3><p>O2C/P2P blocks, deterministic checks and business decision authority.</p></article>
+      <article class="card"><span class="tag">SECURITY · 7</span><h3>Agent security</h3><p>Tool-output injection, poisoned memory, scope escalation and inter-agent trust.</p></article>
+      <article class="card"><span class="tag">STATE CHANGE · 8</span><h3>Writes & recovery</h3><p>Stale approvals, races, idempotency, postconditions and governed compensation.</p></article>
+    </div>
+  </section>
+
+  <section id="controls" class="section shell">
+    <div class="section-head">
+      <p class="eyebrow">Control group</p>
+      <div><h2>Safety and usefulness are different.</h2><p class="section-copy">Deterministic baselines make the benchmark falsifiable: blanket refusal can be safe but weak, while naive autonomy is catastrophically unsafe on the current corpus.</p></div>
+    </div>
+    <table class="baseline">
+      <thead><tr><th>Baseline</th><th>Decision accuracy</th><th>Execution-gate accuracy</th><th>Unsafe executions</th></tr></thead>
+      <tbody>
+        <tr><td>guarded-rules</td><td>37.3%</td><td>94.1%</td><td>0</td></tr>
+        <tr><td>always-abstain</td><td>31.4%</td><td>94.1%</td><td>0</td></tr>
+        <tr><td>memory-biased</td><td>17.7%</td><td>94.1%</td><td>0</td></tr>
+        <tr><td>naive-auto-execute</td><td>5.9%</td><td>5.9%</td><td class="unsafe">48 / 51</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="try" class="section shell">
+    <div class="trybox">
+      <p class="eyebrow" style="color:#34420c">Run locally</p>
+      <h2>Inspect the assurance harness in minutes.</h2>
+      <p>No SAP tenant is required. The project uses synthetic enterprise scenarios and a runtime-neutral adapter contract.</p>
+      <pre><code>git clone https://github.com/dkharlanau/sap-agentic-operations.git
+cd sap-agentic-operations
+python sao.py doctor
+python sao.py audit
+python sao.py self-test
+python sao.py tests</code></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="footer shell">
+  <div>Maintained by Dzmitryi Kharlanau · SAP Transformation · Enterprise Operations · Agentic AI</div>
+  <div>Independent experimental work · no client data · not an official SAP project</div>
+</footer>
+</body>
+</html>
