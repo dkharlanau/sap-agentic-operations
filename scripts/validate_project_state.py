@@ -20,6 +20,11 @@ def fail(errors: list[str], message: str) -> None:
     errors.append(message)
 
 
+def normalized_pep440(version: str) -> str:
+    """Map the human alpha spelling used in docs to the compact PEP 440 package spelling."""
+    return version.replace("-alpha.", "a")
+
+
 def main() -> int:
     errors: list[str] = []
     cases = load_suite(ROOT)
@@ -32,13 +37,40 @@ def main() -> int:
         return 1
 
     benchmark = manifest.get("benchmark") or {}
+    practical = manifest.get("practicalToolkit") or {}
+
     if benchmark.get("caseCount") != len(cases):
         fail(errors, f"sao-manifest benchmark.caseCount={benchmark.get('caseCount')} but executable suite has {len(cases)}")
     declared_packs = benchmark.get("packs") or {}
     if dict(sorted(declared_packs.items())) != dict(sorted(pack_counts.items())):
         fail(errors, f"sao-manifest pack counts {declared_packs!r} do not match executable suite {dict(pack_counts)!r}")
+
+    # The practical toolkit and benchmark are independently versioned surfaces.
+    if not practical.get("version"):
+        fail(errors, "sao-manifest practicalToolkit.version is required")
     if benchmark.get("version") != manifest.get("version"):
-        fail(errors, "sao-manifest project version and benchmark version must match during the current dev line")
+        fail(errors, "top-level sao-manifest version must continue to identify the current assurance/benchmark development line")
+
+    try:
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        package_version_match = re.search(r'^version\s*=\s*"([^"]+)"\s*$', pyproject, flags=re.MULTILINE)
+        package_version = package_version_match.group(1) if package_version_match else None
+    except OSError as exc:
+        package_version = None
+        fail(errors, f"cannot read pyproject.toml: {exc}")
+    expected_package_version = normalized_pep440(str(practical.get("version", "")))
+    if package_version != expected_package_version:
+        fail(errors, f"pyproject version {package_version!r} does not match practical toolkit {expected_package_version!r}")
+
+    try:
+        init_text = (ROOT / "sao_toolkit" / "__init__.py").read_text(encoding="utf-8")
+        init_match = re.search(r'^__version__\s*=\s*"([^"]+)"\s*$', init_text, flags=re.MULTILINE)
+        init_version = init_match.group(1) if init_match else None
+    except OSError as exc:
+        init_version = None
+        fail(errors, f"cannot read practical toolkit package version: {exc}")
+    if init_version != expected_package_version:
+        fail(errors, f"sao_toolkit.__version__ {init_version!r} does not match practical toolkit {expected_package_version!r}")
 
     simulator = manifest.get("simulator") or {}
     if simulator.get("stateful") is not True or simulator.get("faultInjection") is not True:
@@ -63,6 +95,8 @@ def main() -> int:
         fail(errors, "HTTP OpenAPI must expose /sao-decision")
 
     for schema in (
+        "evidence-pack.schema.json",
+        "reconciliation-pack.schema.json",
         "decision.schema.json",
         "evidence.schema.json",
         "write-envelope.schema.json",
@@ -77,26 +111,35 @@ def main() -> int:
             fail(errors, f"invalid schema {schema}: {exc}")
 
     required_surfaces = [
+        ROOT / "docs" / "EVIDENCE-PACK.md",
+        ROOT / "docs" / "QUICKCHECK.md",
+        ROOT / "docs" / "RECONCILIATION.md",
         ROOT / "docs" / "CONTROL-PLANE.md",
         ROOT / "docs" / "ASSURANCE-CASE.md",
         ROOT / "traces" / "README.md",
         ROOT / "adapters" / "README.md",
         ROOT / "experiments" / "README.md",
+        ROOT / "sao_toolkit" / "cli.py",
+        ROOT / ".github" / "workflows" / "product.yml",
     ]
     for path in required_surfaces:
         if not path.exists():
             fail(errors, f"required public surface missing: {path.relative_to(ROOT)}")
 
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    if f"SAO-Bench v{benchmark.get('version')}" not in readme:
-        fail(errors, "README status does not match manifest benchmark version")
-    if f"**{len(cases)} synthetic cases**" not in readme:
-        fail(errors, "README case-count statement does not match executable suite")
+    practical_version = str(practical.get("version", ""))
+    benchmark_version = str(benchmark.get("version", ""))
+    if practical_version not in readme:
+        fail(errors, "README practical-toolkit version does not match manifest")
+    if benchmark_version not in readme:
+        fail(errors, "README benchmark version does not match manifest")
+    if "SAO-Bench" not in readme or not re.search(rf'\b{len(cases)}\b', readme):
+        fail(errors, "README must expose the executable SAO-Bench case count")
 
     cff = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
     match = re.search(r'^version:\s*"?([^"\n]+)"?\s*$', cff, flags=re.MULTILINE)
     if not match or not match.group(1).startswith("0.3"):
-        fail(errors, "CITATION.cff must describe the current 0.3 development line")
+        fail(errors, "CITATION.cff must describe the current 0.3 assurance/benchmark development line")
 
     if errors:
         print("SAO project-state validation failed:", file=sys.stderr)
@@ -104,7 +147,11 @@ def main() -> int:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    print(f"SAO project-state validation passed: version={benchmark.get('version')}, cases={len(cases)}, packs={dict(sorted(pack_counts.items()))}")
+    print(
+        "SAO project-state validation passed: "
+        f"practical={practical_version}, benchmark={benchmark_version}, "
+        f"cases={len(cases)}, packs={dict(sorted(pack_counts.items()))}"
+    )
     return 0
 
 
