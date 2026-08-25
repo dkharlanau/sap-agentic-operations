@@ -1,528 +1,429 @@
 # SAP Agentic Operations (SAO)
 
+[![SAO practical toolkit](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/product.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/product.yml)
 [![SAO full suite](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/suite.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/suite.yml)
-[![SAO benchmark](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/evals.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/evals.yml)
 [![Dynamic variants](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/dynamic-variants.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/dynamic-variants.yml)
 
-**An executable assurance lab for AI agents that reason around SAP and other enterprise systems of record.**
+**A local-first, evidence-first toolkit for diagnosing, reconciling, validating, and safely recovering SAP-heavy enterprise operations.**
 
 Maintained by **Dzmitryi Kharlanau** — SAP Transformation · Enterprise Operations · Agentic AI.
 
-Status: **experimental SAO-Bench v0.3-dev**.
-
-Most agent demos answer:
-
-> Can an LLM call a tool?
-
-SAO asks the harder enterprise question:
-
-> **Can we produce evidence that an agent knows when it may read, reason, request approval, execute, abstain, and verify a business outcome?**
-
-SAO uses SAP-shaped synthetic operations to test identity, evidence, source-of-truth authority, policy, authorization, capability scope, approval, stale state, idempotency, postconditions, provenance, compensation, memory trust, and adversarial tool/context inputs.
-
-No SAP tenant is required. No client data belongs here. The simulator does **not** emulate S/4HANA.
+Status: **experimental practical toolkit v0.4-dev / SAO-Bench v0.3-dev**.
 
 ---
 
-## Try the lab in 60 seconds
+## Start with a real operational question
 
-Requirements: Python 3.11+; the core tooling uses the standard library.
+A customer is wrong in S/4. An IDoc is green. A mapping changed. A target value is stale. Somebody proposes: “just reprocess it.”
+
+The difficult question is not whether one technical message succeeded.
+
+It is:
+
+> **What business change are we trying to explain, which evidence is actually related to that change, and what recovery action is justified without making the state worse?**
+
+SAO turns fragmented operational evidence into:
+
+- a bounded diagnosis;
+- missing evidence;
+- safe next actions;
+- actions that are explicitly **not** justified;
+- a business-level resolution condition;
+- traceable evidence references.
+
+The first practical workflow does this without SAP credentials, a database, or an LLM.
+
+```text
+SAP / MDG / IDoc / AIF / CPI / exports
+                 |
+                 v
+           Evidence Pack
+                 |
+      identity + authority
+      causality + freshness
+      mapping + message state
+      target business state
+                 |
+                 v
+          Incident Analyzer
+                 |
+      diagnosis / evidence gap
+      safe recovery choices
+      blocked unsafe shortcuts
+                 |
+                 v
+       business postcondition
+```
+
+---
+
+## Try it in about a minute
+
+Requirements: Python 3.11+.
 
 ```bash
 git clone https://github.com/dkharlanau/sap-agentic-operations.git
 cd sap-agentic-operations
+python -m pip install .
 
-python sao.py doctor
-python sao.py audit
-python sao.py self-test
-python sao.py tests
+sao demo
 ```
 
-Expected distinction:
+The default demo models a common support trap:
 
-- `doctor` checks the assurance harness itself;
-- `self-test` should score 100% because it generates predictions from benchmark truth;
-- **neither is a model/runtime result**.
+- an older customer change has a successful message;
+- a newer authoritative MDG change exists;
+- the target still contains the old value;
+- no message is causally linked to the current change.
 
-Profile the intentionally different deterministic baselines:
-
-```bash
-python sao.py baselines
-```
-
-Check that a runtime adapter obeys the neutral protocol:
-
-```bash
-python sao.py adapter-check -- python adapters/guarded_rules.py
-```
-
-Generate adversarial variants:
-
-```bash
-python sao.py variants \
-  --seed local-demo \
-  --per-template 4 \
-  --output /tmp/sao-variants.jsonl
-
-python sao.py score-cases \
-  --cases /tmp/sao-variants.jsonl \
-  --predictions reference
-```
-
----
-
-## The project in one diagram
+SAO should classify it as:
 
 ```text
-Agent runtime / Joule / LangGraph / n8n / custom orchestrator
-                              |
-                              v
-                    Runtime Adapter Contract
-                              |
-                              v
-                     SAO Decision Contract
-                              |
-              +---------------+---------------+
-              | identity | evidence | policy  |
-              | risk     | approval | trust   |
-              +---------------+---------------+
-                              |
-                              v
-                      Decision / Abstain
-                              |
-                       approval if needed
-                              |
-                              v
-                    State-Change Envelope
-                              |
-                              v
-                     Narrow typed tool
-                              |
-                              v
-                    SAP / system of record
-                              |
-                              v
-                    Verify + Audit + Recover
-
-                     ^                    ^
-                     |                    |
-               SAO-Bench             SAO-Trace
-                     \____________________/
-                              |
-                    Assurance Case / Review
+current_outbound_event_not_proven
 ```
 
-The model may reason broadly. The state-changing surface should remain narrow, typed, policy-bound, observable, and revocable.
+and explicitly reject:
 
-Start with [`docs/CONTROL-PLANE.md`](docs/CONTROL-PLANE.md).
+```text
+reprocess_old_successful_message
+manual_target_overwrite
+```
+
+The generated report is written to:
+
+```text
+sao-demo/sao-output/incident-report.md
+sao-demo/sao-output/incident-report.json
+```
+
+### Explore different failure modes
+
+```bash
+sao demo --list
+
+sao demo --scenario business-rejection --output /tmp/sao-business
+sao demo --scenario mapping-drift --output /tmp/sao-mapping
+sao demo --scenario target-mismatch --output /tmp/sao-target
+sao demo --scenario resolved --output /tmp/sao-resolved
+```
+
+Bundled scenarios currently cover:
+
+| Scenario | What it demonstrates |
+|---|---|
+| `missing-current-event` | old technical success does not explain a newer business change |
+| `business-rejection` | transport success is not business acceptance |
+| `mapping-drift` | historical replay cannot silently use a newer identity mapping |
+| `target-mismatch` | accepted message but wrong business postcondition |
+| `technical-failure` | retry is unsafe before commit/idempotency state is understood |
+| `resolved` | complete evidence chain to verified target state |
+| `identity-unresolved` | cross-system comparison is blocked without canonical identity |
+| `stale-target-observation` | an old target snapshot cannot prove a new message succeeded |
+| `target-identity-mismatch` | the event targets a different identity than current mapping |
 
 ---
 
-## What exists today
+## Analyze your own exports
 
-### SAO-Bench: 51 reviewed enterprise-control cases
+An SAO **Evidence Pack** is intentionally a small folder of JSON/CSV files:
 
-The static development corpus contains **51 synthetic cases** across a core set and five packs.
-
-| Pack | Cases | Main control problem |
-|---|---:|---|
-| Core | 15 | causality, authority, evidence, approvals, abstention |
-| Integration Operations | 7 | replay, ordering, mapping drift, retry ambiguity, business acknowledgement |
-| Master Data / MDG | 7 | canonical identity, source of truth, governance/mapping versions |
-| Business Process | 7 | O2C/P2P blocks, deterministic checks, business authority |
-| Agent Security | 7 | tool-output injection, poisoned memory, scope escalation, inter-agent trust |
-| State Change | 8 | stale approval, races, idempotency, postconditions, compensation |
-
-Every case carries:
-
-- an **R0–R4 business-impact tier**;
-- one or more **T1–T10 failure/threat classes**;
-- explicit expected control findings/actions;
-- forbidden actions;
-- an execution gate;
-- safe abstention/policy outcomes where appropriate.
-
-The evaluator reports failure signatures by case, pack, risk tier, threat class, and expected status.
-
-```bash
-python sao.py audit --json
-python sao.py self-test --json
+```text
+incident/
+  incident.json
+  source_changes.csv
+  messages.csv
+  target_state.csv
+  identity_map.csv
 ```
 
-See [`evals/README.md`](evals/README.md), [`docs/BENCHMARK.md`](docs/BENCHMARK.md), and [`docs/CASE-PACKS.md`](docs/CASE-PACKS.md).
-
-### Deterministic control baselines
-
-SAO contains deliberately simple no-model strategies so a benchmark cannot look useful merely because its reference answers score 100%.
-
-A reproducible 51-case snapshot demonstrates sharply different behavior:
-
-| Baseline | Decision-class accuracy | Execution-gate accuracy | Unsafe executions |
-|---|---:|---:|---:|
-| `guarded-rules` | 37.3% | 94.1% | 0 |
-| `always-abstain` | 31.4% | 94.1% | 0 |
-| `memory-biased` | 17.7% | 94.1% | 0 |
-| `naive-auto-execute` | 5.9% | 5.9% | **48 / 51** |
-
-This is a control group, not a model leaderboard.
-
-The point is that blanket refusal can be safe but weak, generic guardrails cannot replace enterprise evidence, and naive autonomy is catastrophically unsafe on the corpus.
-
-See [`baselines/`](baselines/).
-
-### Synthetic Enterprise Lab v0.3
-
-The stateful simulator tests dynamic failure conditions that a static prompt benchmark cannot represent well.
-
-It models:
-
-- canonical identity and mapping versions;
-- deterministic time;
-- policy drift;
-- event/message ledger;
-- delay/drop/duplicate faults;
-- scoped approvals and expiry;
-- object version/precondition binding;
-- typed writes;
-- idempotency/collision detection;
-- business postconditions;
-- audit evidence;
-- governed compensation;
-- trust-aware memory/evidence.
-
-Examples enforced by tests:
-
-- missing approval → reject;
-- changed identity mapping → quarantine/reject stale action;
-- changed object version → invalidate stale approval;
-- same idempotency key + same operation → no second mutation;
-- same key + different operation → reject;
-- technical success + failed business postcondition → failure, not success;
-- available rollback + missing rollback authorization → do not compensate;
-- untrusted ticket/tool text → never becomes control authority.
+Validate:
 
 ```bash
-python sao.py tests
+sao incident validate ./incident
 ```
 
-See [`simulator/`](simulator/).
+Analyze:
 
-### SAO-Trace
+```bash
+sao incident analyze ./incident
+```
 
-A safe final sentence does not prove the runtime behaved safely internally.
+Read the full input contract in [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md).
 
-SAO-Trace evaluates observable action sequences and can detect patterns such as:
+### Why this is connector-neutral
 
-- capability escalation after a narrow tool failure;
-- using untrusted memory as policy;
-- unsafe intermediate writes followed by a safe-looking final answer;
-- obeying control-like instructions embedded in tool output.
+The product is built around evidence semantics, not around one SAP API.
 
-The Assurance Case explicitly states when trace/telemetry evidence is absent or incomplete.
+Future collectors can all produce the same Evidence Pack:
 
-See [`traces/`](traces/) and `scripts/evaluate_trace.py`.
+```text
+Cloud ALM       ─┐
+AIF export       │
+CPI export       ├──> Evidence Pack ──> same diagnostic engine
+IDoc CSV         │
+custom API/SQL   │
+manual Excel    ─┘
+```
+
+Connectors can change. The meaning of identity, authority, causality, mapping version, acknowledgement and business postcondition should not.
 
 ---
 
-## Runtime-neutral integration
+## Example of the output model
 
-SAO does not require a particular agent framework.
-
-An adapter receives one case without benchmark truth:
+A diagnosis is not a free-form paragraph. It is a structured operational decision:
 
 ```json
 {
-  "protocol_version": "0.1",
-  "case": {
-    "id": "...",
-    "pack": "...",
-    "scenario": "...",
-    "risk_tier": "R3",
-    "threats": ["T8"],
-    "input": {}
-  }
+  "status": "insufficient_evidence",
+  "classification": "current_outbound_event_not_proven",
+  "execution_allowed": false,
+  "findings": [
+    "A successful technical message exists, but it predates the current authoritative change.",
+    "Old technical success is not evidence that the current business change replicated."
+  ],
+  "missing_evidence": [
+    "outbound event causally linked to the current source change"
+  ],
+  "safe_next_actions": [
+    "determine_whether_current_outbound_event_was_created"
+  ],
+  "unsafe_actions": [
+    "reprocess_old_successful_message",
+    "manual_target_overwrite"
+  ]
 }
 ```
 
-It returns one [`SAO Decision`](schemas/decision.schema.json).
-
-### Local adapter
-
-```bash
-python sao.py adapter-check -- python your_adapter.py
-
-python sao.py run-adapter \
-  --output /tmp/predictions.jsonl \
-  -- python your_adapter.py
-
-python sao.py score /tmp/predictions.jsonl --json
-```
-
-### Generic HTTPS runtime bridge
-
-```bash
-export SAO_ADAPTER_URL=https://agent.example.com/sao-decision
-export SAO_ADAPTER_TOKEN=...
-
-python sao.py adapter-check -- python adapters/http_endpoint.py
-python sao.py run-adapter --output /tmp/predictions.jsonl -- python adapters/http_endpoint.py
-```
-
-The bridge rejects remote plain HTTP, embedded URL credentials, mismatched case IDs, and oversized responses. Benchmark `expected` truth is never sent to the runtime.
-
-See [`adapters/README.md`](adapters/README.md) and [`adapters/http/openapi.json`](adapters/http/openapi.json).
+The goal is not to make the tool sound intelligent. The goal is to make the operational conclusion inspectable.
 
 ---
 
-## Bring your own runtime: one GitHub workflow
+# What SAO is becoming
 
-The manual workflow [`SAO external runtime evaluation`](.github/workflows/external-runtime.yml) turns an HTTPS agent endpoint into a reproducible evidence bundle.
+The practical toolkit is the front door. Underneath it is a larger architecture and assurance lab.
 
-Configure repository secrets:
+The project is designed around four connected surfaces.
 
-```text
-SAO_ADAPTER_URL=https://your-agent.example/sao-decision
-SAO_ADAPTER_TOKEN=<optional bearer token>
-```
+## 1. SAP Operations Toolkit
 
-Run the workflow and provide runtime/model/capability metadata.
+Current:
 
-It executes:
+- Evidence Pack v0.1;
+- deterministic Incident Analyzer;
+- installable zero-dependency CLI;
+- nine reproducible failure scenarios;
+- Markdown + JSON reports.
 
-```text
-project validation
-    -> corpus audit
-    -> adapter conformance
-    -> 51-case external run
-    -> deterministic score
-    -> agent/tool configuration fingerprints
-    -> experiment manifest with corpus/evaluator hashes
-    -> Assurance Case
-    -> human-readable Assurance Review
-    -> release integrity manifest
-    -> evidence artifact bundle
-```
+Next:
 
-Benchmark control failures are preserved as experiment results rather than disguised as infrastructure failures.
-
-The next critical milestone is a **real external-runtime result** through this path.
-
----
-
-## Dynamic / hidden adversarial variants
-
-Static cases are reviewable but can be memorized. SAO also generates deterministic variants from control invariants:
-
-- stale approvals;
-- ambiguous identity;
-- duplicate replay;
-- tool-output injection;
-- missing business postcondition;
-- stale runbook/policy memory.
-
-The runtime never receives the raw generation seed or benchmark truth.
-
-For hidden experiments, the report exposes only a SHA-256 seed commitment. The raw hidden corpus is not uploaded automatically. The seed can be disclosed after predictions are frozen when independent reproduction is desired.
-
-See [`docs/DYNAMIC-VARIANTS.md`](docs/DYNAMIC-VARIANTS.md) and [`SAO dynamic variants`](.github/workflows/dynamic-variants.yml).
-
----
-
-## Evidence, not screenshots
-
-SAO treats provenance as part of the benchmark result.
-
-A real runtime experiment can bind:
-
-- exact SAO commit and benchmark version;
-- corpus SHA-256;
-- evaluator SHA-256;
-- runtime/framework identity;
-- model identity/version when known;
-- agent-config SHA-256;
-- tool/capability-manifest SHA-256;
-- capability/policy profiles;
-- raw predictions;
-- benchmark report;
-- trace evidence where observable;
-- machine-readable Assurance Case;
-- human-readable Assurance Review.
-
-Build/compare evidence locally:
-
-```bash
-python sao.py manifest --version 0.3-dev --output /tmp/release.json
-python sao.py diff before-report.json after-report.json
-```
-
-`diff` reports fixed/regressed cases plus pack/risk/threat deltas; aggregate score movement alone is not enough for enterprise change control.
-
-### Public result ledger
-
-[`results/index.json`](results/index.json) is the machine-readable result ledger.
-
-It currently contains only the harness self-test and explicitly keeps:
-
-```json
-"leaderboard_enabled": false
-```
-
-SAO will not publish a runtime leaderboard until at least two independently configured, reproducible external runtime results exist and the comparison protocol is credible.
-
-See [`results/README.md`](results/README.md).
-
----
-
-## Benchmark governance and release discipline
-
-SAO-Bench expected answers are reviewable claims, not unquestionable truth.
-
-The repository now has:
-
-- deterministic corpus audit;
-- pack-level human review checklist;
-- immutable released case-ID policy;
-- explicit semantic-change versioning;
-- a structured `SAO-Bench case dispute` GitHub issue form;
-- public false-positive/false-negative terminology;
-- four release gates: structural validity, corpus review, reproducibility, external validity.
-
-A green CI run is necessary but not sufficient to freeze v0.3.
-
-See:
-
-- [`release/README.md`](release/README.md)
-- [`BENCHMARK_VERSIONING.md`](BENCHMARK_VERSIONING.md)
-- [`docs/BENCHMARK-GOVERNANCE.md`](docs/BENCHMARK-GOVERNANCE.md)
-- [`CHANGELOG.md`](CHANGELOG.md)
-
----
-
-## Machine-readable contracts
-
-Important schemas include:
-
-- [`decision.schema.json`](schemas/decision.schema.json) — portable decision output;
-- [`evidence.schema.json`](schemas/evidence.schema.json) — evidence/provenance envelope;
-- [`write-envelope.schema.json`](schemas/write-envelope.schema.json) — governed state change;
-- [`trace-event.schema.json`](schemas/trace-event.schema.json) — observable runtime events;
-- [`experiment.schema.json`](schemas/experiment.schema.json) — reproducible experiment identity;
-- [`assurance-case.schema.json`](schemas/assurance-case.schema.json) — bounded evidence claims;
-- [`result-index.schema.json`](schemas/result-index.schema.json) — public result ledger.
-
-The core capability model remains:
-
-```text
-READ -> RECOMMEND -> APPROVE -> EXECUTE
-```
-
-These are different capability classes. A failure at one level never grants the next level.
-
----
-
-## Risk model
-
-Business impact and agent failure mechanism are deliberately separate.
-
-### Business impact
-
-- **R0** — informational;
-- **R1** — diagnostic;
-- **R2** — reversible operational change;
-- **R3** — material business-state change;
-- **R4** — high-impact / irreversible / regulated.
-
-### Threat / control-failure classes
-
-- **T1** goal / instruction hijacking;
-- **T2** excessive tool capability;
-- **T3** identity / privilege abuse;
-- **T4** memory / context poisoning;
-- **T5** insecure agent/tool communication;
-- **T6** cascading / retry failure;
-- **T7** trust / authority exploitation;
-- **T8** stale-state execution;
-- **T9** verification failure;
-- **T10** provenance loss.
-
-See [`docs/RISK-MODEL.md`](docs/RISK-MODEL.md).
-
----
-
-## Design invariants
-
-1. **Identity before comparison.**
-2. **Evidence before diagnosis.**
-3. **Deterministic rules before probabilistic reasoning.**
-4. **Recommendation is not authorization.**
-5. **Authorization is not execution.**
-6. **Every write is bound to exact current state.**
-7. **Model confidence never grants capability.**
-8. **Evidence channels never become instruction channels.**
-9. **`insufficient_evidence` and `policy_blocked` are successful safe outcomes.**
-10. **API success is not business success until postconditions are verified.**
-11. **A tool failure never authorizes a broader tool.**
-12. **Compensation is a governed state change, not an automatic escape hatch.**
-13. **Published experiment failures remain visible.**
-14. **Benchmark truth cannot be customized per runtime.**
-15. **A score without provenance is not a benchmark result.**
-16. **A safe final answer does not erase an unsafe intermediate action.**
-
-Accepted architectural decisions and reversal criteria live in [`docs/adr/`](docs/adr/).
-
----
-
-## SAP-shaped, framework-neutral
-
-The initial narrative scenarios are:
-
-- [`IDoc / interface failure triage`](scenarios/001-idoc-interface-triage.md)
-- [`MDG / master-data discrepancy`](scenarios/002-mdg-master-data-discrepancy.md)
-- [`O2C order-block investigation`](scenarios/003-o2c-order-block.md)
-
-They are synthetic abstractions of enterprise support problems, not client reproductions and not replacements for official SAP documentation.
-
-SAO is independent work. It is not an official SAP project, SAP certification, production-safety certification, or substitute for landscape-specific authorization/security review.
-
----
-
-## Repository map
-
-- [`docs/`](docs/) — control plane, benchmark, risk/governance, conformance, ADRs
-- [`contracts/`](contracts/) — capability/evidence/write contracts
-- [`schemas/`](schemas/) — machine-readable evidence contracts
-- [`evals/`](evals/) — core benchmark + domain packs
-- [`baselines/`](baselines/) — deterministic controls and immutable snapshots
-- [`simulator/`](simulator/) — Synthetic Enterprise Lab
-- [`traces/`](traces/) — observable-behavior invariants and fixtures
-- [`adapters/`](adapters/) — framework-neutral runtime bridges
-- [`experiments/`](experiments/) — experiment provenance protocol
-- [`results/`](results/) — public evidence ledger
-- [`release/`](release/) — benchmark freeze/release gates
-- [`research/`](research/) — source-backed architecture research
-- [`scripts/`](scripts/) — evaluators, validators, generators, assurance tooling
-- [`ROADMAP.md`](ROADMAP.md) — evidence-first path to stronger external validity
-- [`AGENTS.md`](AGENTS.md) — engineering constitution for future agent loops
-
----
-
-## What matters next
-
-The project does **not** need another generic agent framework.
-
-Highest-value next milestones:
-
-1. run the first real external runtime through the BYO workflow;
-2. perform human corpus review and freeze **SAO-Bench v0.3.0**;
-3. publish the first reproducible external result in the result ledger;
-4. compare runtime/model versions through failure-signature regression diffs;
-5. disclose and reproduce selected hidden-variant seeds after predictions freeze;
-6. seek external review of R3/R4 benchmark truth and enterprise relevance;
-7. grow the corpus only when a genuinely new control failure is identified.
+- Integration Operations Pack;
+- Cloud ALM read-only collector;
+- local Workbench;
+- semantic master-data reconciliation;
+- cutover integrity campaigns.
 
 See [`ROADMAP.md`](ROADMAP.md).
 
-## Author
+## 2. Enterprise Architecture as Code
+
+SAO can model:
+
+```text
+process
+  -> business invariant
+  -> business object / authority
+  -> systems
+  -> integrations
+  -> controls
+  -> evidence
+  -> agent capability
+  -> cutover state
+```
+
+Validate an example:
+
+```bash
+python sao.py context-check \
+  examples/enterprise-context/customer-replication.json \
+  --strict
+```
+
+Compare architecture snapshots:
+
+```bash
+python sao.py context-diff before.json after.json
+```
+
+The diff highlights changes such as authority drift, integration semantics, idempotency, business postconditions, removed controls and agent-capability changes.
+
+Start with [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+## 3. Synthetic Enterprise Lab
+
+The stateful simulator models control failures without pretending to emulate S/4HANA.
+
+It includes:
+
+- canonical identity and mapping versions;
+- policy drift;
+- delayed/dropped/duplicate messages;
+- approval expiry;
+- before-state/precondition binding;
+- idempotency collisions;
+- business postcondition failures;
+- audit evidence;
+- governed compensation;
+- trust-aware memory and evidence.
+
+Run:
+
+```bash
+python sao.py tests
+```
+
+## 4. SAO-Bench and Agent Assurance
+
+SAO-Bench contains 51 synthetic enterprise-control cases across integration operations, master data, business process, agent security and state change.
+
+It exists to test whether an agent/runtime respects enterprise control boundaries — not to measure writing quality.
+
+Examples include:
+
+- unresolved identity;
+- old successful message vs newer source change;
+- ambiguous master-data authority;
+- duplicate/replay risk;
+- stale approval;
+- tool-output instruction injection;
+- memory poisoning;
+- capability escalation;
+- technical success with failed business postcondition;
+- missing provenance.
+
+The reference self-test is a harness check, not an AI score.
+
+```bash
+python sao.py audit
+python sao.py self-test
+```
+
+---
+
+# Professional views
+
+SAO is intentionally useful from three different roles.
+
+### SAP / Enterprise Architect
+
+Focus on business truth, authority, integration semantics, failure/recovery, clean-core placement, observability and bounded agent capability.
+
+Start with [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+### SAP Consultant / AMS Lead
+
+Focus on evidence collection, repeatable diagnostics, incident ownership, safe recovery, runbook quality and business-level resolution.
+
+Start with [`docs/AGENTIC-AMS-OPERATING-MODEL.md`](docs/AGENTIC-AMS-OPERATING-MODEL.md) and [`docs/SAP-OPERATIONS-FAILURE-ATLAS.md`](docs/SAP-OPERATIONS-FAILURE-ATLAS.md).
+
+### System Analyst
+
+Focus on requirement → invariant → identity → contract → control → evidence → test → owner.
+
+Start with [`docs/BUSINESS-TRACEABILITY.md`](docs/BUSINESS-TRACEABILITY.md).
+
+---
+
+# Design principles
+
+1. **Identity before comparison.**
+2. **Authority before correction.**
+3. **Change causality before replay.**
+4. **Deterministic rules before probabilistic reasoning.**
+5. **Recommendation is not authorization.**
+6. **Authorization is not execution.**
+7. **A green interface is not a verified business outcome.**
+8. **A tool failure never authorizes a broader tool.**
+9. **Current evidence outranks stale operational memory.**
+10. **Compensation is a governed state change, not an escape hatch.**
+11. **A score without provenance is not a benchmark result.**
+12. **The practical tool should be useful without an AI model.**
+
+---
+
+# What SAO deliberately does not replace
+
+SAO is not intended to become:
+
+- another SAP monitoring dashboard;
+- another SAP MCP server;
+- an S/4HANA emulator;
+- a generic CSV diff tool;
+- an unrestricted SAP write agent;
+- a replacement for SAP Cloud ALM, Integration Suite monitoring, Migration Cockpit/DTV, Joule Studio or AI Agent Hub.
+
+Its niche is the layer between **observation and a safe operational decision**.
+
+---
+
+# Current product roadmap
+
+The roadmap is now measured by time-to-first-value and external use rather than framework size.
+
+Priority order:
+
+1. Evidence Pack + Incident Analyzer — **in progress / first implementation available**;
+2. Integration Operations Pack;
+3. simple installation and demo quality;
+4. local Workbench;
+5. Cloud ALM read-only connector;
+6. semantic Master Data Reconciliation;
+7. Cutover Integrity Pack;
+8. architecture rendering/traceability;
+9. cross-runtime agent assurance.
+
+See [`ROADMAP.md`](ROADMAP.md).
+
+---
+
+# Safety, privacy and SAP scope
+
+SAO examples are synthetic.
+
+Do not publish:
+
+- customer/client names;
+- production IDs that reveal private context;
+- ticket contents;
+- internal URLs;
+- credentials/tokens;
+- proprietary payloads;
+- copied SAP product code.
+
+Local Evidence Packs stay local; the practical toolkit does not upload them.
+
+SAO is independent work. It is not an official SAP project, SAP certification, production-safety certification, or substitute for landscape-specific authorization, security, compliance or business ownership.
+
+---
+
+# Repository map
+
+- [`sao_toolkit/`](sao_toolkit/) — practical Evidence Pack / incident-analysis product code
+- [`examples/evidence-packs/`](examples/evidence-packs/) — ready-to-run operational evidence examples
+- [`docs/EVIDENCE-PACK.md`](docs/EVIDENCE-PACK.md) — practical input contract
+- [`docs/`](docs/) — architecture, operations, benchmark and governance
+- [`schemas/`](schemas/) — machine-readable contracts
+- [`simulator/`](simulator/) — Synthetic Enterprise Lab
+- [`evals/`](evals/) — SAO-Bench corpus
+- [`adapters/`](adapters/) — runtime-neutral agent adapter protocol
+- [`traces/`](traces/) — SAO-Trace examples and invariants
+- [`results/`](results/) — public reproducible result ledger
+- [`research/`](research/) — source-backed architecture research
+- [`ROADMAP.md`](ROADMAP.md) — product roadmap
+
+---
+
+# Author
 
 **Dzmitryi Kharlanau**  
 SAP Transformation · Enterprise Operations · Agentic AI
