@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use SAP Agentic Operations (SAO) or SAO-Bench, please cite this repository."
+message: "If you use SAP Agentic Operations (SAO) or SAO-Bench, please cite this repository and the exact benchmark release or commit used."
 title: "SAP Agentic Operations"
 type: software
 authors:
@@ -7,7 +7,7 @@ authors:
     given-names: "Dzmitryi"
 repository-code: "https://github.com/dkharlanau/sap-agentic-operations"
 url: "https://github.com/dkharlanau/sap-agentic-operations"
-version: "0.2-dev"
+version: "0.3.0-dev"
 license: "Apache-2.0"
 keywords:
   - "SAP"
@@ -18,14 +18,19 @@ keywords:
   - "AI agents"
   - "Model Context Protocol"
   - "MCP"
-  - "enterprise architecture"
+  - "enterprise systems of record"
   - "agent evaluation"
-  - "conformance"
+  - "agent assurance"
   - "AI safety"
-  - "observability"
+  - "stateful simulation"
+  - "fault injection"
   - "data governance"
+  - "observability"
 abstract: >-
-  Framework-neutral control-plane reference, synthetic enterprise simulator, and
-  executable benchmark for evaluating AI agents that reason around SAP and enterprise
-  systems of record. SAO tests identity, evidence, policy, capability, approval,
-  stale-state safety, tool misuse, provenance, idempotency, and postcondition verification.
+  Vendor-neutral pre-production assurance lab for AI agents operating around SAP and
+  enterprise systems of record. SAO combines an executable 51-case benchmark,
+  machine-readable decision/evidence/state-change contracts, deterministic control
+  baselines, a stateful synthetic enterprise simulator with fault injection, runtime-neutral
+  adapters, reproducible experiment provenance, and integrity manifests. It evaluates
+  identity, authority, evidence, policy, capability, approval, stale-state safety,
+  idempotency, tool misuse, memory trust, provenance, postconditions, audit, and compensation.
