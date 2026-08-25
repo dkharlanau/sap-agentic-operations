@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1",
+  "experiment_id": "20260825-reference-selftest-v03",
+  "result_kind": "reference_self_test",
+  "created_at": "2026-08-25T12:37:00Z",
+  "benchmark": {
+    "name": "SAO-Bench",
+    "version": "0.3-dev",
+    "commit": "a0457590bbe03fd4654a76e0e55a2b237e17cded",
+    "case_count": 51,
+    "corpus_sha256": null,
+    "evaluator_sha256": null
+  },
+  "runtime": {
+    "name": "SAO reference generator",
+    "version": "0.3-dev",
+    "adapter": null
+  },
+  "model": null,
+  "agent_config_sha256": null,
+  "tool_manifest_sha256": null,
+  "capability_profile": null,
+  "policy_profile": null,
+  "simulator": null,
+  "artifacts": {
+    "predictions": "generated://reference-from-expected",
+    "report": "github-actions://SAO-full-suite/sao-full-suite-report",
+    "audit": null
+  },
+  "environment": {
+    "runner": "github-actions/ubuntu-latest",
+    "region": null
+  },
+  "notes": "Harness self-test only. This is not a model or agent benchmark result."
+}
