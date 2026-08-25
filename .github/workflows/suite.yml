@@ -44,10 +44,14 @@ jobs:
       - name: Emit suite report
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50 --json > sao-suite-report.json
 
-      - name: Upload suite and baseline reports
+      - name: Emit benchmark integrity manifest
+        run: python scripts/build_release_manifest.py --version 0.3-dev --output sao-release-manifest.json
+
+      - name: Upload suite evidence
         uses: actions/upload-artifact@v4
         with:
           name: sao-full-suite-report
           path: |
             sao-suite-report.json
             sao-baseline-profiles.json
+            sao-release-manifest.json
