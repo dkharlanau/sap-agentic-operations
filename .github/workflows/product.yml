@@ -1,0 +1,57 @@
+name: SAO practical toolkit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  product:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install practical CLI
+        run: python -m pip install .
+
+      - name: Run Evidence Pack demo through installed sao command
+        run: sao demo --output /tmp/sao-demo
+
+      - name: Validate demo diagnosis contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/sao-demo/sao-output/incident-report.json').read_text())
+          assert report['classification'] == 'current_outbound_event_not_proven', report
+          assert report['execution_allowed'] is False
+          assert 'reprocess_old_successful_message' in report['unsafe_actions']
+          print('demo diagnosis contract: OK')
+          PY
+
+      - name: Validate Evidence Pack through installed CLI
+        run: sao incident validate /tmp/sao-demo
+
+      - name: Re-analyze Evidence Pack through installed CLI
+        run: sao incident analyze /tmp/sao-demo --output /tmp/sao-demo/reanalysis
+
+      - name: Run practical toolkit unit tests
+        run: python -m unittest tests.test_incident_toolkit -v
+
+      - name: Upload practical demo report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sao-practical-demo
+          path: |
+            /tmp/sao-demo/incident.json
+            /tmp/sao-demo/sao-output/incident-report.json
+            /tmp/sao-demo/sao-output/incident-report.md
