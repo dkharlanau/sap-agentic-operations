@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/reconciliation-pack.schema.json",
+  "title": "SAO Reconciliation Pack v0.1",
+  "type": "object",
+  "required": ["format", "version", "reconciliation_id", "source", "target", "identity_map", "attributes"],
+  "properties": {
+    "format": {"const": "sao-reconciliation-pack"},
+    "version": {"const": "0.1"},
+    "reconciliation_id": {"type": "string", "minLength": 1},
+    "source": {"$ref": "#/$defs/snapshot"},
+    "target": {"$ref": "#/$defs/snapshot"},
+    "identity_map": {
+      "type": "object",
+      "required": ["file"],
+      "properties": {"file": {"type": "string", "minLength": 1}},
+      "additionalProperties": true
+    },
+    "attributes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "authority"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "authority": {"type": "string", "enum": ["source", "target", "unknown"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "required": ["system", "file"],
+      "properties": {
+        "system": {"type": "string", "minLength": 1},
+        "file": {"type": "string", "minLength": 1},
+        "id_column": {"type": "string", "minLength": 1},
+        "observed_at_column": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
