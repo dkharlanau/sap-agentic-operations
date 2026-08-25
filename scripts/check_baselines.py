@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from baselines.generate import STRATEGIES, load_suite
 from scripts.evaluate_suite import evaluate_case
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def recall(required: list[str], produced: list[str]) -> tuple[int, int]:
