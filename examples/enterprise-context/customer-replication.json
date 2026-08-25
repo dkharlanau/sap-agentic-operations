@@ -1,0 +1,102 @@
+{
+  "schema_version": "0.1",
+  "context_id": "customer-governance-to-fulfillment",
+  "description": "Synthetic SAP-shaped context linking customer governance, replication, fulfillment controls, recovery evidence, and agent boundaries.",
+  "business_process": {
+    "id": "o2c-customer-readiness",
+    "name": "Customer master readiness for order-to-cash",
+    "scope": {
+      "sales_organization": "SYN-1000",
+      "country": "DE"
+    },
+    "owner": "o2c-process-owner"
+  },
+  "business_invariants": [
+    {
+      "id": "INV-01",
+      "statement": "Fulfillment must not act on a customer delivery-control state older than the latest activated governed state for the same scope.",
+      "impact_tier": "R3",
+      "owner": "o2c-process-owner"
+    },
+    {
+      "id": "INV-02",
+      "statement": "The same governed business change must not be applied twice at the target.",
+      "impact_tier": "R2",
+      "owner": "integration-operations"
+    }
+  ],
+  "objects": [
+    {
+      "id": "OBJ-CUSTOMER-1",
+      "type": "customer_business_partner",
+      "canonical_identity": "customer://synthetic/100",
+      "authority": [
+        {
+          "scope": "delivery-control",
+          "system_id": "SYS-MDG",
+          "business_owner": "master-data-governance",
+          "effective_from": "cutover+0",
+          "effective_to": null
+        }
+      ],
+      "system_identities": [
+        {"system_id": "SYS-MDG", "identity": "C-100", "mapping_version": "map-v12"},
+        {"system_id": "SYS-S4", "identity": "BP-900", "mapping_version": "map-v12"}
+      ]
+    }
+  ],
+  "systems": [
+    {"id": "SYS-MDG", "name": "Synthetic Governance Hub", "role": "governance", "lifecycle": "active", "clean_core_boundary": "external"},
+    {"id": "SYS-INT", "name": "Synthetic Integration Layer", "role": "integration", "lifecycle": "active", "clean_core_boundary": "external"},
+    {"id": "SYS-S4", "name": "Synthetic S/4 Fulfillment", "role": "system_of_record", "lifecycle": "active", "clean_core_boundary": "core"},
+    {"id": "SYS-AGENT", "name": "SAO Diagnostic Agent", "role": "agent_runtime", "lifecycle": "experimental", "clean_core_boundary": "side_by_side"}
+  ],
+  "integrations": [
+    {
+      "id": "INT-CUST-REPL",
+      "producer": "SYS-MDG",
+      "consumer": "SYS-S4",
+      "interaction": "message",
+      "business_intent": "Distribute activated governed customer delivery-control state to fulfillment.",
+      "correlation_key": "business-change-id",
+      "ordering": "per canonical customer identity",
+      "idempotency": "business-change-id",
+      "postcondition": "target delivery-control version equals activated governance version",
+      "recovery_owner": "integration-operations"
+    }
+  ],
+  "controls": [
+    {"id": "CTL-ID", "kind": "deterministic", "statement": "Resolve canonical and target identity using the mapping version applicable to the business change.", "owner": "integration-architecture"},
+    {"id": "CTL-AUTH", "kind": "policy", "statement": "Only activated governed values are distributable as authoritative delivery-control state.", "owner": "master-data-governance"},
+    {"id": "CTL-IDEMP", "kind": "deterministic", "statement": "The target must not apply the same business-change-id twice.", "owner": "integration-architecture"},
+    {"id": "CTL-POST", "kind": "postcondition", "statement": "Observe the target business state after processing; transport success alone is insufficient.", "owner": "sap-operations"},
+    {"id": "CTL-RECON", "kind": "reconciliation", "statement": "Unresolved target versions remain visible until reconciled or explicitly accepted.", "owner": "sap-operations"}
+  ],
+  "evidence": [
+    {"id": "EV-SOURCE", "source": "SYS-MDG", "proves": "activated governed version and change identity", "freshness": "current"},
+    {"id": "EV-MAP", "source": "identity-registry", "proves": "target identity and mapping version", "freshness": "event-time"},
+    {"id": "EV-MESSAGE", "source": "SYS-INT", "proves": "technical delivery attempt and correlation", "freshness": "current"},
+    {"id": "EV-TARGET", "source": "SYS-S4", "proves": "observed business postcondition", "freshness": "current"}
+  ],
+  "agent_boundary": {
+    "max_capability": "recommend",
+    "may_read": ["EV-SOURCE", "EV-MAP", "EV-MESSAGE", "EV-TARGET"],
+    "may_not_decide": ["business authority", "identity when mapping is ambiguous", "write authorization", "exception approval"],
+    "execution_gate": "No direct execution in this context; recovery is performed by typed operational tools under deterministic policy/human authority."
+  },
+  "cutover": {
+    "phase": "steady-state",
+    "authority_transition": null,
+    "delta_watermark": null,
+    "mapping_version": "map-v12",
+    "reconciliation": ["canonical identity", "activated governance version", "target delivery-control version", "unresolved replication state"]
+  },
+  "relations": [
+    {"from": "INV-01", "type": "protected_by", "to": "CTL-ID", "notes": null},
+    {"from": "INV-01", "type": "protected_by", "to": "CTL-POST", "notes": null},
+    {"from": "INV-02", "type": "protected_by", "to": "CTL-IDEMP", "notes": null},
+    {"from": "INT-CUST-REPL", "type": "carries", "to": "OBJ-CUSTOMER-1", "notes": "activated delivery-control state"},
+    {"from": "SYS-AGENT", "type": "may_read", "to": "EV-TARGET", "notes": "recommendation only"},
+    {"from": "CTL-RECON", "type": "uses", "to": "EV-TARGET", "notes": null}
+  ]
+}
