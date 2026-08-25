@@ -1,0 +1,83 @@
+name: SAO practical field report
+description: Share whether SAO helped on a real or sanitized SAP operations case without publishing client data.
+title: "[Field report] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing SAO on a real workflow. **Do not attach production payloads, customer names, tickets, internal URLs, credentials, or confidential identifiers.** Synthetic/sanitized examples are enough to improve the product.
+
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Workflow used
+      options:
+        - Incident Analyzer / Evidence Pack
+        - Quick Check CSV
+        - Batch triage
+        - Workbench
+        - Master-data reconciliation
+        - CSV normalizer
+        - Architecture context
+        - SAO-Bench / agent assurance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: job
+    attributes:
+      label: What job were you trying to do?
+      description: Describe the SAP/enterprise task in generic terms.
+      placeholder: "Example: determine why a newer customer change was not visible in the target despite a successful older IDoc."
+    validations:
+      required: true
+
+  - type: textarea
+    id: input
+    attributes:
+      label: What evidence did you have?
+      description: List evidence types only; do not paste sensitive data.
+      placeholder: "Example: source change export, IDoc list, identity mapping, target snapshot."
+    validations:
+      required: true
+
+  - type: textarea
+    id: result
+    attributes:
+      label: What did SAO conclude?
+      description: Classification, missing evidence, or safe next action. Sanitized output is welcome.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: usefulness
+    attributes:
+      label: Was the result useful?
+      options:
+        - Yes — changed or accelerated the investigation
+        - Partly — useful structure, but incomplete
+        - No — classification or next action was wrong
+        - Could not complete the workflow
+    validations:
+      required: true
+
+  - type: textarea
+    id: missing
+    attributes:
+      label: What was missing or wrong?
+      description: This is the most valuable part of the report.
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would have made SAO worth using again?
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed client/customer names, production identifiers, ticket content, internal URLs, credentials, and proprietary payloads.
+          required: true
