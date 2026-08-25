@@ -20,7 +20,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run 50-case benchmark self-test
+      - name: Validate benchmark contracts and coverage
+        run: python scripts/validate_suite_contracts.py
+
+      - name: Run 50+ case benchmark self-test
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50
 
       - name: Run simulator tests
