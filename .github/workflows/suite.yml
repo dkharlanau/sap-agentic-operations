@@ -32,6 +32,12 @@ jobs:
       - name: Profile deterministic baseline strategies
         run: python scripts/check_baselines.py > sao-baseline-profiles.json
 
+      - name: Smoke-test runtime-neutral adapter protocol
+        run: |
+          python scripts/run_adapter.py --output guarded-adapter.jsonl -- python adapters/guarded_rules.py
+          python baselines/generate.py guarded-rules --output guarded-direct.jsonl
+          cmp guarded-adapter.jsonl guarded-direct.jsonl
+
       - name: Run simulator tests
         run: python -m unittest discover -s tests -p 'test_*.py'
 
