@@ -1,0 +1,169 @@
+name: SAO dynamic variants
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      per_template:
+        description: Hidden variants per invariant template
+        required: true
+        default: '5'
+        type: string
+      runtime_name:
+        description: Runtime name for the hidden external run
+        required: false
+        default: external-runtime
+        type: string
+      runtime_version:
+        description: Runtime version for the hidden external run
+        required: false
+        default: unspecified
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  generator-self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate deterministic public variants twice
+        shell: bash
+        run: |
+          seed="ci-${GITHUB_SHA}"
+          python sao.py variants --seed "$seed" --per-template 4 --output /tmp/variants-a.jsonl
+          python sao.py variants --seed "$seed" --per-template 4 --output /tmp/variants-b.jsonl
+          cmp /tmp/variants-a.jsonl /tmp/variants-b.jsonl
+
+      - name: Reference-score generated variants
+        shell: bash
+        run: |
+          seed="ci-${GITHUB_SHA}"
+          python sao.py score-cases \
+            --cases /tmp/variants-a.jsonl \
+            --predictions reference \
+            --require-cases 24 \
+            --json > sao-dynamic-selftest.json
+          if grep -F "$seed" sao-dynamic-selftest.json; then
+            echo "raw dynamic seed leaked into evaluation report" >&2
+            exit 1
+          fi
+
+      - name: Upload dynamic generator self-test
+        uses: actions/upload-artifact@v4
+        with:
+          name: sao-dynamic-selftest
+          path: sao-dynamic-selftest.json
+
+  hidden-external-runtime:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      SAO_ADAPTER_URL: ${{ secrets.SAO_ADAPTER_URL }}
+      SAO_ADAPTER_TOKEN: ${{ secrets.SAO_ADAPTER_TOKEN }}
+      SAO_VARIANT_SEED: ${{ secrets.SAO_VARIANT_SEED }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Require hidden-seed and HTTPS runtime secrets
+        shell: bash
+        run: |
+          test -n "$SAO_VARIANT_SEED" || { echo "SAO_VARIANT_SEED secret is required" >&2; exit 2; }
+          test -n "$SAO_ADAPTER_URL" || { echo "SAO_ADAPTER_URL secret is required" >&2; exit 2; }
+          case "$SAO_ADAPTER_URL" in
+            https://*) ;;
+            *) echo "SAO_ADAPTER_URL must use HTTPS" >&2; exit 2 ;;
+          esac
+
+      - name: Generate hidden variants
+        shell: bash
+        env:
+          PER_TEMPLATE: ${{ inputs.per_template }}
+        run: |
+          python sao.py variants \
+            --seed "$SAO_VARIANT_SEED" \
+            --per-template "$PER_TEMPLATE" \
+            --output /tmp/sao-hidden-variants.jsonl
+
+      - name: Run external runtime without benchmark truth or seed
+        run: |
+          python sao.py run-adapter \
+            --cases /tmp/sao-hidden-variants.jsonl \
+            --output sao-hidden-predictions.jsonl \
+            -- python adapters/http_endpoint.py
+
+      - name: Score hidden variants as experiment evidence
+        shell: bash
+        run: |
+          set +e
+          python sao.py score-cases \
+            --cases /tmp/sao-hidden-variants.jsonl \
+            --predictions sao-hidden-predictions.jsonl \
+            --json > sao-hidden-report.json
+          rc=$?
+          set -e
+          test -s sao-hidden-report.json
+          echo "Hidden dynamic evaluator exit code: $rc (control failures remain report data)"
+          if grep -F "$SAO_VARIANT_SEED" sao-hidden-report.json; then
+            echo "raw hidden seed leaked into report" >&2
+            exit 1
+          fi
+
+      - name: Emit hidden-variant metadata commitment
+        shell: bash
+        env:
+          PER_TEMPLATE: ${{ inputs.per_template }}
+          RUNTIME_NAME: ${{ inputs.runtime_name }}
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          seed = os.environ["SAO_VARIANT_SEED"]
+          generator = Path("scripts/generate_variants.py").read_bytes()
+          count = sum(1 for line in Path("/tmp/sao-hidden-variants.jsonl").read_text(encoding="utf-8").splitlines() if line.strip())
+          metadata = {
+              "format": "sao-hidden-variant-experiment/0.1",
+              "runtime": {
+                  "name": os.environ.get("RUNTIME_NAME") or "external-runtime",
+                  "version": os.environ.get("RUNTIME_VERSION") or "unspecified"
+              },
+              "generator": {
+                  "path": "scripts/generate_variants.py",
+                  "sha256": "sha256:" + hashlib.sha256(generator).hexdigest(),
+                  "per_template": int(os.environ["PER_TEMPLATE"]),
+                  "case_count": count
+              },
+              "seed_sha256": "sha256:" + hashlib.sha256(seed.encode("utf-8")).hexdigest(),
+              "seed_disclosed": False,
+              "raw_hidden_corpus_uploaded": False,
+              "benchmark_truth_sent_to_runtime": False,
+              "notes": "Disclose the seed later only if exact independent reproduction is desired after predictions are frozen."
+          }
+          Path("sao-hidden-metadata.json").write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload hidden dynamic evidence without raw corpus or seed
+        uses: actions/upload-artifact@v4
+        with:
+          name: sao-hidden-variants-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            sao-hidden-predictions.jsonl
+            sao-hidden-report.json
+            sao-hidden-metadata.json
