@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use SAP Agentic Operations, please cite this repository."
+message: "If you use SAP Agentic Operations (SAO) or SAO-Bench, please cite this repository."
 title: "SAP Agentic Operations"
 type: software
 authors:
@@ -7,7 +7,7 @@ authors:
     given-names: "Dzmitryi"
 repository-code: "https://github.com/dkharlanau/sap-agentic-operations"
 url: "https://github.com/dkharlanau/sap-agentic-operations"
-version: "0.1.0-dev"
+version: "0.2-dev"
 license: "Apache-2.0"
 keywords:
   - "SAP"
@@ -19,10 +19,13 @@ keywords:
   - "Model Context Protocol"
   - "MCP"
   - "enterprise architecture"
-  - "evaluation"
+  - "agent evaluation"
+  - "conformance"
+  - "AI safety"
   - "observability"
   - "data governance"
 abstract: >-
-  Reference architectures, safety patterns, synthetic enterprise scenarios, and
-  machine-readable evaluations for AI agents operating around SAP AMS, master data,
-  integrations, and enterprise operations.
+  Framework-neutral control-plane reference, synthetic enterprise simulator, and
+  executable benchmark for evaluating AI agents that reason around SAP and enterprise
+  systems of record. SAO tests identity, evidence, policy, capability, approval,
+  stale-state safety, tool misuse, provenance, idempotency, and postcondition verification.
