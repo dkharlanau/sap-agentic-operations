@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2",
+  "schemaVersion": "0.3",
   "project": "SAP Agentic Operations",
   "shortName": "SAO",
   "status": "experimental",
@@ -9,7 +9,35 @@
     "website": "https://dkharlanau.github.io/",
     "github": "https://github.com/dkharlanau"
   },
-  "purpose": "Vendor-neutral pre-production assurance lab for AI agents operating around SAP and enterprise systems of record using SAP-shaped synthetic operations.",
+  "purpose": "Local-first evidence and operational decision toolkit for SAP-heavy enterprise operations, backed by a vendor-neutral architecture and agent-assurance lab.",
+  "practicalToolkit": {
+    "name": "SAO Practical Toolkit",
+    "version": "0.4.0-alpha.1",
+    "install": "python -m pip install .",
+    "entrypoint": "sao",
+    "python": ">=3.11",
+    "runtimeDependencies": 0,
+    "writeCapability": false,
+    "networkRequiredForCoreWorkflows": false,
+    "workflows": [
+      "evidence-pack-incident-analysis",
+      "one-csv-quick-check",
+      "batch-incident-triage",
+      "local-read-only-workbench",
+      "semantic-master-data-reconciliation",
+      "explicit-csv-normalization"
+    ],
+    "surfaces": {
+      "package": "sao_toolkit/",
+      "cli": "sao_toolkit/cli.py",
+      "evidencePack": "docs/EVIDENCE-PACK.md",
+      "quickCheck": "docs/QUICKCHECK.md",
+      "reconciliation": "docs/RECONCILIATION.md",
+      "normalization": "docs/NORMALIZING-EXPORTS.md",
+      "fieldTesting": "docs/FIELD-TESTING.md",
+      "productCI": ".github/workflows/product.yml"
+    }
+  },
   "surfaces": {
     "controlPlane": "docs/CONTROL-PLANE.md",
     "riskModel": "docs/RISK-MODEL.md",
@@ -31,12 +59,20 @@
     "roadmap": "ROADMAP.md"
   },
   "schemas": {
+    "evidencePack": "schemas/evidence-pack.schema.json",
+    "reconciliationPack": "schemas/reconciliation-pack.schema.json",
     "decision": "schemas/decision.schema.json",
     "evidence": "schemas/evidence.schema.json",
     "writeEnvelope": "schemas/write-envelope.schema.json",
     "experiment": "schemas/experiment.schema.json"
   },
   "capabilities": [
+    "local-evidence-pack",
+    "deterministic-incident-analysis",
+    "batch-triage",
+    "semantic-reconciliation",
+    "explicit-export-normalization",
+    "local-read-only-workbench",
     "identity-resolution-gate",
     "evidence-provenance",
     "deterministic-policy-boundary",
@@ -82,5 +118,5 @@
     "stateful": true,
     "faultInjection": true
   },
-  "independence": "Independent open-source research project; not an official SAP project, certification, or production-safety guarantee."
+  "independence": "Independent open-source project; not an official SAP project, certification, or production-safety guarantee."
 }
