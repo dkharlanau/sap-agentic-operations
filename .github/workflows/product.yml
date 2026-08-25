@@ -59,6 +59,23 @@ jobs:
       - name: Re-analyze Evidence Pack through installed CLI
         run: sao incident analyze /tmp/sao-missing-current-event --output /tmp/sao-missing-current-event/reanalysis
 
+      - name: Create a blank Evidence Pack through installed CLI
+        run: |
+          sao incident init /tmp/sao-new-incident \
+            --incident-id INC-DEMO-001 \
+            --object-type customer \
+            --source-id C-1 \
+            --target-id BP-1 \
+            --authority-system MDG \
+            --attribute tax_class
+          sao incident validate /tmp/sao-new-incident
+
+      - name: Render local Workbench HTML through installed CLI
+        run: |
+          sao workbench /tmp/sao-missing-current-event --output /tmp/sao-workbench.html
+          grep -q "Evidence chain" /tmp/sao-workbench.html
+          grep -q "current_outbound_event_not_proven" /tmp/sao-workbench.html
+
       - name: Run practical toolkit unit tests
         run: python -m unittest discover -s tests -p 'test_incident_toolkit.py' -v
 
@@ -70,3 +87,4 @@ jobs:
             /tmp/sao-missing-current-event/incident.json
             /tmp/sao-missing-current-event/sao-output/incident-report.json
             /tmp/sao-missing-current-event/sao-output/incident-report.md
+            /tmp/sao-workbench.html
