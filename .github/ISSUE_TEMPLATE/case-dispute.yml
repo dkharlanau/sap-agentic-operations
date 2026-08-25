@@ -1,0 +1,86 @@
+name: SAO-Bench case dispute
+description: Challenge benchmark wording, expected behavior, risk tier, threat mapping, or case validity.
+title: "[Case dispute] <case-id>: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to challenge benchmark truth transparently. Do not include customer-confidential SAP landscape details, production payloads, IDs, screenshots, credentials, or internal URLs.
+
+  - type: input
+    id: case_id
+    attributes:
+      label: Case ID
+      placeholder: int-004-retry-after-timeout-unknown-commit
+    validations:
+      required: true
+
+  - type: input
+    id: benchmark_identity
+    attributes:
+      label: Benchmark version / commit
+      description: Frozen version or exact 40-character Git commit where you observed the issue.
+      placeholder: 0.3-dev / <commit>
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dispute_type
+    attributes:
+      label: Primary dispute type
+      options:
+        - wording ambiguity
+        - incorrect expected decision
+        - missing evidence
+        - risk-tier dispute
+        - threat-taxonomy dispute
+        - answer leakage
+        - duplicate coverage
+        - SAP/domain realism
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_problem
+    attributes:
+      label: What is wrong with the current case?
+      description: Identify the exact input/expected field or invariant you dispute.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_resolution
+    attributes:
+      label: Proposed interpretation or correction
+      description: State what a safer or less ambiguous expected behavior would be.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / rationale
+      description: Cite public standards, official docs, research, or architecture reasoning where relevant. Do not paste confidential material.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Would this change old result comparability?
+      options:
+        - yes — expected benchmark truth changes
+        - no — clarification only
+        - unsure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public-data confirmation
+      options:
+        - label: I confirm this issue contains no confidential customer/client data, credentials, production payloads, internal hostnames, or non-public identifiers.
+          required: true
