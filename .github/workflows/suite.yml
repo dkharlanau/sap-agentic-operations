@@ -1,0 +1,36 @@
+name: SAO full suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run 50-case benchmark self-test
+        run: python scripts/evaluate_suite.py --predictions reference --require-cases 50
+
+      - name: Run simulator tests
+        run: python -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Emit suite report
+        run: python scripts/evaluate_suite.py --predictions reference --require-cases 50 --json > sao-suite-report.json
+
+      - name: Upload suite report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sao-full-suite-report
+          path: sao-suite-report.json
