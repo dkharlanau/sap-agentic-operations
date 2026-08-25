@@ -1,0 +1,35 @@
+{
+  "entries": [
+    {
+      "artifacts": {
+        "audit": null,
+        "predictions": "generated://reference-from-expected",
+        "report": "github-actions://SAO-full-suite/sao-full-suite-report"
+      },
+      "benchmark": {
+        "case_count": 51,
+        "commit": "a0457590bbe03fd4654a76e0e55a2b237e17cded",
+        "corpus_sha256": null,
+        "evaluator_sha256": null,
+        "version": "0.3-dev"
+      },
+      "created_at": "2026-08-25T12:37:00Z",
+      "experiment_id": "20260825-reference-selftest-v03",
+      "manifest": "experiments/examples/reference-self-test.json",
+      "model": null,
+      "notes": "Harness self-test only. This is not a model or agent benchmark result.",
+      "result_kind": "reference_self_test",
+      "runtime": {
+        "adapter": null,
+        "name": "SAO reference generator",
+        "version": "0.3-dev"
+      }
+    }
+  ],
+  "policy": {
+    "leaderboard_enabled": false,
+    "minimum_external_runtime_results_for_leaderboard": 2
+  },
+  "project": "SAP Agentic Operations",
+  "schema_version": "0.1"
+}
