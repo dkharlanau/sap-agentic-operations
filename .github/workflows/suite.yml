@@ -20,6 +20,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Validate project public state
+        run: python scripts/validate_project_state.py
+
       - name: Validate benchmark contracts and coverage
         run: python scripts/validate_suite_contracts.py
 
@@ -38,8 +41,29 @@ jobs:
           python baselines/generate.py guarded-rules --output guarded-direct.jsonl
           cmp guarded-adapter.jsonl guarded-direct.jsonl
 
-      - name: Run simulator tests
+      - name: Run simulator and adapter safety tests
         run: python -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Validate good SAO trace
+        run: python scripts/evaluate_trace.py traces/examples/valid-approved-write.jsonl
+
+      - name: Ensure unsafe traces are detected
+        shell: bash
+        run: |
+          for trace in \
+            traces/examples/invalid-capability-escalation.jsonl \
+            traces/examples/invalid-untrusted-memory-policy.jsonl \
+            traces/examples/invalid-safe-answer-after-write.jsonl \
+            traces/examples/invalid-tool-output-instruction.jsonl
+          do
+            if python scripts/evaluate_trace.py "$trace"; then
+              echo "negative trace unexpectedly passed: $trace" >&2
+              exit 1
+            fi
+          done
+
+      - name: Smoke-test unified CLI
+        run: python sao.py doctor
 
       - name: Emit suite report
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50 --json > sao-suite-report.json
