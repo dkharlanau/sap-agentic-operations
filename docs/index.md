@@ -1,21 +1,152 @@
 ---
-title: SAP Agentic Operations — Architecture & Assurance Lab
-description: Enterprise architecture, SAP operations, system analysis and executable assurance patterns for AI agents around systems of record.
+title: SAP Agentic Operations — Practical Toolkit & Architecture Lab
+description: Local-first SAP operations evidence, incident analysis, reconciliation, enterprise architecture and agent assurance.
 ---
 
 # SAP Agentic Operations
 
-## Architecture & Assurance Lab
+## Practical Toolkit & Architecture Lab
 
-**How do we let AI reason around SAP without letting probabilistic reasoning become invisible authority over enterprise state?**
+**From fragmented SAP evidence to a reproducible diagnosis, a safe next action, and a verified business outcome.**
 
-SAP Agentic Operations (SAO) is an independent public lab by **Dzmitryi Kharlanau** exploring that question through SAP-shaped operational scenarios, architecture contracts, executable evaluations and stateful failure simulation.
+SAP Agentic Operations (SAO) is an independent public project by **Dzmitryi Kharlanau**.
 
-The project is deliberately not another “chat with SAP” demo.
+The practical toolkit is now the front door. The architecture and agent-assurance lab sits underneath it.
 
-It focuses on the parts that become difficult in real enterprises:
+---
 
-**identity · data/process authority · integration semantics · deterministic policy · approvals · stale state · idempotency · business postconditions · cutover · recovery · auditability**
+## Try the practical alpha
+
+```bash
+git clone https://github.com/dkharlanau/sap-agentic-operations.git
+cd sap-agentic-operations
+python -m pip install .
+sao demo
+```
+
+Current practical version: **0.4.0-alpha.1**.
+
+The default demo deliberately models a dangerous support shortcut: a successful old message exists, but it does not prove that a newer authoritative business change replicated.
+
+The output separates:
+
+- observed evidence;
+- deterministic findings;
+- missing evidence;
+- safe next actions;
+- actions not justified by current evidence;
+- the business postcondition required before resolution.
+
+---
+
+## Four ways to use SAO today
+
+### 1. Incident analysis
+
+```bash
+sao incident init ./incident --incident-id INC-001
+sao incident validate ./incident
+sao incident analyze ./incident
+```
+
+Use a small local Evidence Pack containing source changes, messages, target state and identity mappings.
+
+[Evidence Pack v0.1](./EVIDENCE-PACK.md)
+
+### 2. One-CSV Quick Check
+
+```bash
+sao quickcheck demo
+sao quickcheck analyze my-incidents.csv
+```
+
+Useful when a consultant already works from one Excel-style list. Quick Check uses the same diagnostic engine as the full Evidence Pack.
+
+[Quick Check](./QUICKCHECK.md)
+
+### 3. Semantic master-data reconciliation
+
+```bash
+sao reconcile demo
+sao reconcile analyze ./reconciliation
+```
+
+SAO does not stop at “source != target.” It considers canonical identity, attribute authority and snapshot freshness before deciding whether a difference is actually an error.
+
+[Semantic reconciliation](./RECONCILIATION.md)
+
+### 4. Local Workbench
+
+```bash
+sao workbench ./incident
+```
+
+A read-only local view of the evidence chain, diagnosis, evidence gaps, safe actions and resolution condition.
+
+No cloud account is required for the core workflow.
+
+---
+
+## Bring normal SAP/Excel exports
+
+Real exports do not use canonical column names.
+
+```bash
+sao normalize demo
+
+sao normalize csv \
+  --table messages \
+  --input we02-export.csv \
+  --mapping messages.mapping.json \
+  --output incident/messages.csv
+```
+
+Explicit mappings can translate source column names, constants and technical values such as IDoc-style statuses.
+
+[Normalizing exports](./NORMALIZING-EXPORTS.md)
+
+The design rule is simple:
+
+> **Connectors may change; evidence semantics should remain stable.**
+
+---
+
+## The practical evidence chain
+
+```text
+MDG / S4 / IDoc / AIF / CPI / Excel / OTel
+                    |
+                    v
+              canonical evidence
+                    |
+         identity + authority
+         causality + freshness
+         mapping + message state
+         business postcondition
+                    |
+                    v
+          diagnosis / reconciliation
+                    |
+         safe recovery boundaries
+                    |
+                    v
+            verified outcome
+```
+
+SAO deliberately does not equate:
+
+```text
+HTTP 200
+IDoc 53
+middleware green
+API success
+```
+
+with:
+
+```text
+business problem resolved
+```
 
 ---
 
@@ -23,37 +154,36 @@ It focuses on the parts that become difficult in real enterprises:
 
 ### SAP / Enterprise Architect
 
-Start with the decisions behind the boxes.
+Focus on the decisions behind the boxes:
 
-- [The Architect's Decision Spine](./ARCHITECT-DECISION-SPINE.md)
+- [Architecture entry point](../ARCHITECTURE.md)
+- [Architect's Decision Spine](./ARCHITECT-DECISION-SPINE.md)
 - [Enterprise Integration Contract](./INTEGRATION-CONTRACT.md)
 - [Agent Identity & Authorization](./AGENT-IDENTITY-AUTHORIZATION.md)
 - [SAP Agent Tool Contract Design](./SAP-AGENT-TOOL-CONTRACTS.md)
 - [Cutover & Recovery Architecture](./CUTOVER-RECOVERY.md)
 - [Architecture Fitness Functions](./ARCHITECTURE-FITNESS-FUNCTIONS.md)
-- [Enterprise Architecture Anti-Patterns](./ENTERPRISE-ANTI-PATTERNS.md)
 
 Core question:
 
-> If this component, mapping, approval, integration or agent is wrong, what is the first deterministic control that prevents incorrect business state?
+> If this component, mapping, integration or agent is wrong, what deterministic boundary prevents incorrect business state?
 
 ### SAP Consultant / AMS Lead
 
-Start with operations, workshops and recovery.
+Focus on repeatable diagnosis and recovery:
 
-- [SAP Consulting Review Cards](./CONSULTING-REVIEW-CARDS.md)
-- [SAP / Enterprise Operations Failure Atlas](./SAP-OPERATIONS-FAILURE-ATLAS.md)
+- [Evidence Pack](./EVIDENCE-PACK.md)
+- [SAP Operations Failure Atlas](./SAP-OPERATIONS-FAILURE-ATLAS.md)
 - [Agentic SAP AMS Operating Model](./AGENTIC-AMS-OPERATING-MODEL.md)
-- [SAP Agentic Opportunity Map](./SAP-AGENTIC-OPPORTUNITY-MAP.md)
-- [Enterprise Agent Readiness Ladder](./ENTERPRISE-AGENT-READINESS-LADDER.md)
+- [SAP Consulting Review Cards](./CONSULTING-REVIEW-CARDS.md)
 
 Core question:
 
-> Can the solution be diagnosed, operated, recovered and handed over without relying on one experienced person remembering how it works?
+> Can the incident be diagnosed, recovered and handed over without one experienced person remembering the hidden process?
 
 ### System Analyst
 
-Start with traceability and evidence.
+Focus on traceability:
 
 - [Business-to-System Traceability](./BUSINESS-TRACEABILITY.md)
 - [Enterprise Integration Contract](./INTEGRATION-CONTRACT.md)
@@ -61,16 +191,16 @@ Start with traceability and evidence.
 
 Core question:
 
-> What exactly must remain true, in which business scope, and what observable evidence proves that the systems preserved it?
+> What exactly must remain true, in which scope, and what evidence proves that the systems preserved it?
 
 ---
 
 ## Architecture as code
 
-SAO includes a small machine-readable **Enterprise Context Graph** that connects:
+SAO includes a small machine-readable Enterprise Context Graph:
 
 ```text
-business process
+process
   -> invariant
   -> business object
   -> authority
@@ -82,13 +212,7 @@ business process
   -> cutover state
 ```
 
-The goal is not to replace an EA repository. The goal is to make enough architecture context inspectable by humans, CI and agent evaluations.
-
-Example:
-
-`examples/enterprise-context/customer-replication.json`
-
-Validate locally:
+Validate:
 
 ```bash
 python sao.py context-check \
@@ -102,97 +226,64 @@ Compare two architecture snapshots:
 python sao.py context-diff before.json after.json --json
 ```
 
-High-risk drift includes changes such as:
-
-- business/data authority moved;
-- integration interaction semantics changed;
-- idempotency or correlation semantics changed;
-- business postcondition changed;
-- protecting control removed;
-- agent capability increased;
-- execution gate changed;
-- cutover authority/watermark changed.
-
 ---
 
-## Executable assurance
+## Under the toolkit: executable assurance
+
+SAO also contains:
 
 ### SAO-Bench
 
-The current development corpus contains **51 synthetic enterprise-control cases** across:
-
-- core control scenarios;
-- integration operations;
-- master data / MDG;
-- O2C / P2P business processes;
-- agent security;
-- state-changing operations.
-
-The benchmark evaluates control decisions, not writing style.
+51 synthetic enterprise-control cases across integration operations, master data, business process, agent security and state-changing operations.
 
 ### Synthetic Enterprise Lab
 
-A stateful simulator exercises:
+Stateful failure simulation for identity/mapping drift, policy changes, delayed/duplicate messages, stale approvals, idempotency, postconditions and compensation.
 
-- identity/mapping drift;
-- policy changes;
-- delayed/duplicated messages;
-- stale approvals;
-- concurrency;
-- idempotency;
-- failed business postconditions;
-- compensation;
-- untrusted operational memory.
+### SAO-Trace
 
-### Dynamic adversarial variants
+Deterministic checks over observable runtime action sequences.
 
-Seeded hidden variants reduce fixed-case memorization risk while keeping benchmark truth deterministic.
+These layers are no longer the product front door. Their role is to preserve and test the enterprise-control semantics used by the practical workflows.
 
 ---
 
-## A few architecture anti-patterns
+## A few useful anti-patterns
 
 **Green Interface Fallacy**  
-A technically green interface is treated as proof that the business state is correct.
+Technical success is treated as proof that business state is correct.
 
 **Source of Truth by Habit**  
-Authority is inferred from where the field has historically lived.
+Authority is inferred from where data historically lived.
 
 **Retry Button Architecture**  
-Every integration failure is assumed to be recoverable by sending the message again.
+Every integration failure is assumed to be fixed by replay.
 
 **Similarity Is Identity**  
-The closest-looking BP/customer/vendor is treated as the same business entity.
+The closest-looking BP/customer/vendor is treated as the same entity.
 
 **Prompt as Business Rule**  
-A probabilistic instruction is used where deterministic policy should exist.
+Probabilistic model instructions are used where deterministic policy belongs.
 
-**Agent as Missing Integration Layer**  
-AI is used to hide weak identity, mappings, APIs and ownership rather than make those contracts explicit.
-
-[Read the full anti-pattern catalog](./ENTERPRISE-ANTI-PATTERNS.md).
+[Full anti-pattern catalog](./ENTERPRISE-ANTI-PATTERNS.md)
 
 ---
 
-## The operating thesis
+## What happens next
 
-The interesting enterprise-AI problem is not whether a model can call an API.
+Alpha 1 is intentionally a stopping point for feature accumulation.
 
-It is whether the organization can produce inspectable evidence for:
+The next high-value evidence is **field use**:
 
-- **which business truth is at risk;**
-- **who owns it;**
-- **which system persists it;**
-- **which identity maps it across systems;**
-- **which controls protect it;**
-- **what evidence proves current state;**
-- **what the agent may infer;**
-- **what the agent must never decide;**
-- **what exact gate permits state change;**
-- **how the business outcome is verified;**
-- **how failure is recovered without creating a second failure.**
+- Did a real SAP practitioner complete a Quick Check or Evidence Pack?
+- Was the diagnosis useful?
+- Which evidence was hard to prepare?
+- Which classification was wrong or incomplete?
+- Which export format should SAO normalize next?
 
-That is the layer SAO is trying to make executable.
+Use the repository's **SAO practical field report** issue form with sanitized information only.
+
+[Product roadmap](../ROADMAP.md)
 
 ---
 
@@ -205,4 +296,4 @@ SAP Transformation · Enterprise Operations · Agentic AI
 - [Professional site](https://dkharlanau.github.io/)
 - [LinkedIn](https://www.linkedin.com/in/dkharlanau/)
 
-SAO is independent work. It is not an official SAP project or certification and does not use client data.
+SAO is independent work. It is not an official SAP project or certification and does not use client data in public examples.
