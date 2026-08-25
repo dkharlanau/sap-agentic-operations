@@ -53,13 +53,12 @@ jobs:
           print(f'all {len(expected)} practical scenarios: OK')
           PY
 
-      - name: Validate Evidence Pack through installed CLI
-        run: sao incident validate /tmp/sao-missing-current-event
+      - name: Validate and re-analyze Evidence Pack
+        run: |
+          sao incident validate /tmp/sao-missing-current-event
+          sao incident analyze /tmp/sao-missing-current-event --output /tmp/sao-missing-current-event/reanalysis
 
-      - name: Re-analyze Evidence Pack through installed CLI
-        run: sao incident analyze /tmp/sao-missing-current-event --output /tmp/sao-missing-current-event/reanalysis
-
-      - name: Create a blank Evidence Pack through installed CLI
+      - name: Create a blank Evidence Pack
         run: |
           sao incident init /tmp/sao-new-incident \
             --incident-id INC-DEMO-001 \
@@ -70,16 +69,45 @@ jobs:
             --attribute tax_class
           sao incident validate /tmp/sao-new-incident
 
-      - name: Render local Workbench HTML through installed CLI
+      - name: Batch triage multiple Evidence Packs
+        run: |
+          mkdir -p /tmp/sao-batch
+          cp -r /tmp/sao-missing-current-event /tmp/sao-batch/missing
+          cp -r /tmp/sao-business-rejection /tmp/sao-batch/rejected
+          cp -r /tmp/sao-resolved /tmp/sao-batch/resolved
+          sao batch /tmp/sao-batch --output /tmp/sao-batch-report
+          grep -q "current_outbound_event_not_proven" /tmp/sao-batch-report/batch-report.csv
+          grep -q "business_processing_rejection" /tmp/sao-batch-report/batch-report.csv
+
+      - name: Render local Workbench HTML
         run: |
           sao workbench /tmp/sao-missing-current-event --output /tmp/sao-workbench.html
           grep -q "Evidence chain" /tmp/sao-workbench.html
           grep -q "current_outbound_event_not_proven" /tmp/sao-workbench.html
 
-      - name: Run practical toolkit unit tests
-        run: python -m unittest discover -s tests -p 'test_incident_toolkit.py' -v
+      - name: Run semantic master-data reconciliation
+        run: |
+          sao reconcile demo --output /tmp/sao-reconcile
+          grep -q "authoritative_mismatch" /tmp/sao-reconcile/sao-output/reconciliation-report.csv
+          grep -q "non_authoritative_snapshot_is_newer" /tmp/sao-reconcile/sao-output/reconciliation-report.csv
+          sao reconcile analyze /tmp/sao-reconcile --output /tmp/sao-reconcile/reanalysis
 
-      - name: Upload practical demo report
+      - name: Normalize a WE02-like export into canonical evidence
+        run: |
+          sao normalize demo --output /tmp/sao-normalize
+          grep -q "success" /tmp/sao-normalize/messages.csv
+          grep -q "failed" /tmp/sao-normalize/messages.csv
+          sao normalize csv \
+            --table messages \
+            --input /tmp/sao-normalize/we02_export.csv \
+            --mapping /tmp/sao-normalize/messages.mapping.json \
+            --output /tmp/sao-normalize/messages-second-pass.csv
+          cmp /tmp/sao-normalize/messages.csv /tmp/sao-normalize/messages-second-pass.csv
+
+      - name: Run all practical toolkit unit tests
+        run: python -m unittest discover -s tests -p 'test_*toolkit.py' -v
+
+      - name: Upload practical evidence bundle
         uses: actions/upload-artifact@v4
         with:
           name: sao-practical-demo
@@ -88,3 +116,8 @@ jobs:
             /tmp/sao-missing-current-event/sao-output/incident-report.json
             /tmp/sao-missing-current-event/sao-output/incident-report.md
             /tmp/sao-workbench.html
+            /tmp/sao-batch-report/batch-report.csv
+            /tmp/sao-batch-report/batch-report.md
+            /tmp/sao-reconcile/sao-output/reconciliation-report.csv
+            /tmp/sao-reconcile/sao-output/reconciliation-report.md
+            /tmp/sao-normalize/messages.csv
