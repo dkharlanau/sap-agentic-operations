@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/enterprise-context.schema.json",
+  "title": "SAO Enterprise Context Graph",
+  "description": "A compact machine-readable context model linking business process, object authority, systems, integrations, controls, evidence, ownership, cutover state and agent capability.",
+  "type": "object",
+  "required": ["schema_version", "context_id", "business_process", "business_invariants", "objects", "systems", "relations"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "context_id": {"type": "string", "minLength": 3},
+    "description": {"type": "string"},
+    "business_process": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "scope": {"type": "object", "additionalProperties": true},
+        "owner": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "business_invariants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "impact_tier"],
+        "properties": {
+          "id": {"type": "string"},
+          "statement": {"type": "string"},
+          "impact_tier": {"type": "string", "enum": ["R0", "R1", "R2", "R3", "R4"]},
+          "owner": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "canonical_identity"],
+        "properties": {
+          "id": {"type": "string"},
+          "type": {"type": "string"},
+          "canonical_identity": {"type": "string"},
+          "authority": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["scope", "system_id"],
+              "properties": {
+                "scope": {"type": "string"},
+                "system_id": {"type": "string"},
+                "business_owner": {"type": ["string", "null"]},
+                "effective_from": {"type": ["string", "null"]},
+                "effective_to": {"type": ["string", "null"]}
+              },
+              "additionalProperties": false
+            }
+          },
+          "system_identities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["system_id", "identity"],
+              "properties": {
+                "system_id": {"type": "string"},
+                "identity": {"type": "string"},
+                "mapping_version": {"type": ["string", "null"]}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "systems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "role": {"type": "string", "enum": ["system_of_record", "governance", "integration", "consumer", "analytics", "agent_runtime", "other"]},
+          "lifecycle": {"type": ["string", "null"]},
+          "clean_core_boundary": {"type": ["string", "null"], "enum": ["core", "on_stack_extension", "side_by_side", "external", null]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "producer", "consumer", "interaction"],
+        "properties": {
+          "id": {"type": "string"},
+          "producer": {"type": "string"},
+          "consumer": {"type": "string"},
+          "interaction": {"type": "string", "enum": ["sync_api", "async_event", "message", "batch"]},
+          "business_intent": {"type": "string"},
+          "correlation_key": {"type": ["string", "null"]},
+          "ordering": {"type": ["string", "null"]},
+          "idempotency": {"type": ["string", "null"]},
+          "postcondition": {"type": ["string", "null"]},
+          "recovery_owner": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "statement"],
+        "properties": {
+          "id": {"type": "string"},
+          "kind": {"type": "string", "enum": ["deterministic", "policy", "human_approval", "agentic_reasoning", "postcondition", "reconciliation"]},
+          "statement": {"type": "string"},
+          "owner": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "proves"],
+        "properties": {
+          "id": {"type": "string"},
+          "source": {"type": "string"},
+          "proves": {"type": "string"},
+          "freshness": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "agent_boundary": {
+      "type": ["object", "null"],
+      "properties": {
+        "max_capability": {"type": "string", "enum": ["read", "recommend", "approve", "execute"]},
+        "may_read": {"type": "array", "items": {"type": "string"}},
+        "may_not_decide": {"type": "array", "items": {"type": "string"}},
+        "execution_gate": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "cutover": {
+      "type": ["object", "null"],
+      "properties": {
+        "phase": {"type": "string"},
+        "authority_transition": {"type": ["string", "null"]},
+        "delta_watermark": {"type": ["string", "null"]},
+        "mapping_version": {"type": ["string", "null"]},
+        "reconciliation": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "type", "to"],
+        "properties": {
+          "from": {"type": "string"},
+          "type": {"type": "string"},
+          "to": {"type": "string"},
+          "notes": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
