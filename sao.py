@@ -143,6 +143,20 @@ def cmd_score(args: argparse.Namespace) -> int:
     return python_script("evaluate_suite.py", *argv).returncode
 
 
+def cmd_score_cases(args: argparse.Namespace) -> int:
+    argv = [
+        "--cases",
+        args.cases,
+        "--predictions",
+        args.predictions,
+        "--require-cases",
+        str(args.require_cases),
+    ]
+    if args.json:
+        argv.append("--json")
+    return python_script("evaluate_casefile.py", *argv).returncode
+
+
 def cmd_variants(args: argparse.Namespace) -> int:
     return python_script(
         "generate_variants.py",
@@ -225,6 +239,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--require-cases", type=int, default=50)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_score)
+
+    p = sub.add_parser("score-cases", help="score predictions against generated/custom case JSONL")
+    p.add_argument("--cases", required=True)
+    p.add_argument("--predictions", required=True)
+    p.add_argument("--require-cases", type=int, default=1)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_score_cases)
 
     p = sub.add_parser("variants", help="generate deterministic adversarial case variants")
     p.add_argument("--seed", required=True)
