@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/write-envelope.schema.json",
+  "title": "Enterprise State-Change Safety Envelope",
+  "type": "object",
+  "required": ["envelope_version", "decision_id", "risk_tier", "object", "operation", "precondition", "postcondition", "policy", "expires_at", "idempotency_key", "correlation_id", "compensation"],
+  "properties": {
+    "envelope_version": {"const": "0.1"},
+    "decision_id": {"type": "string", "minLength": 1},
+    "risk_tier": {"type": "string", "enum": ["R2", "R3", "R4"]},
+    "object": {
+      "type": "object",
+      "required": ["canonical_type", "canonical_id", "target_system", "target_system_id"],
+      "properties": {
+        "canonical_type": {"type": "string"},
+        "canonical_id": {"type": "string"},
+        "target_system": {"type": "string"},
+        "target_system_id": {"type": "string"}
+      }
+    },
+    "operation": {
+      "type": "object",
+      "required": ["name", "parameters"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "parameters": {"type": "object"},
+        "allowed_fields": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "precondition": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "state_hash": {"type": "string"},
+        "version": {"type": ["string", "integer"]},
+        "expected_state": {"type": "object"}
+      }
+    },
+    "postcondition": {
+      "type": "object",
+      "required": ["expected_state"],
+      "properties": {
+        "expected_state": {"type": "object"},
+        "verification_method": {"type": "string"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": ["result", "policy_ref"],
+      "properties": {
+        "result": {"type": "string", "enum": ["allow", "require_approval", "block"]},
+        "policy_ref": {"type": "string"}
+      }
+    },
+    "approval": {
+      "type": ["object", "null"],
+      "properties": {
+        "approval_id": {"type": "string"},
+        "approver": {"type": "string"},
+        "approved_at": {"type": "string", "format": "date-time"},
+        "bound_state_hash": {"type": ["string", "null"]}
+      }
+    },
+    "expires_at": {"type": "string", "format": "date-time"},
+    "idempotency_key": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "compensation": {
+      "type": "object",
+      "required": ["available"],
+      "properties": {
+        "available": {"type": "boolean"},
+        "reference": {"type": ["string", "null"]}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"policy": {"properties": {"result": {"const": "require_approval"}}}}},
+      "then": {"required": ["approval"], "properties": {"approval": {"type": "object"}}}
+    },
+    {
+      "if": {"properties": {"policy": {"properties": {"result": {"const": "block"}}}}},
+      "then": false
+    }
+  ],
+  "additionalProperties": false
+}
