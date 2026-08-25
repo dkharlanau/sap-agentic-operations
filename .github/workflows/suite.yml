@@ -23,6 +23,9 @@ jobs:
       - name: Validate benchmark contracts and coverage
         run: python scripts/validate_suite_contracts.py
 
+      - name: Validate experiment provenance
+        run: python scripts/validate_experiments.py
+
       - name: Run 50+ case benchmark self-test
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50
 
