@@ -3,11 +3,15 @@
 
 This reuses the same deterministic case semantics as the static SAO-Bench evaluator,
 but does not assign a frozen SAO-Bench version to generated cases.
+
+Generated-case reports deliberately redact raw variant seeds so hidden-case experiments
+can preserve the seed until predictions are frozen. Only a SHA-256 commitment is emitted.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from collections import Counter, defaultdict
@@ -18,6 +22,20 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.evaluate_suite import evaluate_case, load_jsonl, rate, reference_prediction
+
+
+def public_generation(value: object) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    result = {
+        key: value[key]
+        for key in ("template", "index")
+        if key in value
+    }
+    seed = value.get("seed")
+    if isinstance(seed, str):
+        result["seed_sha256"] = "sha256:" + hashlib.sha256(seed.encode("utf-8")).hexdigest()
+    return result
 
 
 def main() -> int:
@@ -85,7 +103,7 @@ def main() -> int:
             "expected_status": expected.get("status"),
             "passed": passed,
             "failures": failures,
-            "generation": case.get("generation"),
+            "generation": public_generation(case.get("generation")),
         }
         results.append(result)
 
@@ -116,6 +134,7 @@ def main() -> int:
         "by_threat": {k: rate(v) for k, v in sorted(stats["by_threat"].items())},
         "by_status": {k: rate(v) for k, v in sorted(stats["by_status"].items())},
         "results": results,
+        "hidden_seed_policy": "raw generation seeds are omitted; reports expose seed_sha256 only",
         "disclaimer": "Generated/custom cases are not a frozen SAO-Bench release unless explicitly published as such.",
     }
 
