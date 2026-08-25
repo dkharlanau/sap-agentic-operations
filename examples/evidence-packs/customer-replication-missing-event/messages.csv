@@ -1,0 +1,2 @@
+message_id,change_id,object_id,status,created_at,target_id,business_status,mapping_version
+MSG-100,CHG-100,C-100,success,2026-08-25T09:45:00Z,BP-501,accepted,M1
