@@ -1,6 +1,63 @@
 # Changelog
 
-This changelog tracks benchmark/corpus/scoring changes that affect interpretation of SAO results.
+SAO has two versioned surfaces:
+
+- the **practical toolkit**, focused on evidence, incident analysis, reconciliation and local workflows;
+- **SAO-Bench**, the experimental agent-assurance corpus and evaluator.
+
+## 0.4.0-alpha.1 — Practical Toolkit Alpha 1
+
+First usable product-oriented alpha.
+
+### Added
+
+- Installable zero-dependency `sao` CLI for Python 3.11+.
+- SAO Evidence Pack v0.1:
+  - explicit business-object identity;
+  - source change evidence;
+  - message/integration evidence;
+  - target business-state observations;
+  - versioned identity mappings.
+- Deterministic Incident Analyzer with evidence-backed classifications including:
+  - `current_outbound_event_not_proven`;
+  - `business_processing_rejection`;
+  - `mapping_version_drift`;
+  - `target_state_mismatch_after_current_event`;
+  - `technical_message_failure`;
+  - `business_state_verified`;
+  - unresolved identity;
+  - stale target observation;
+  - message/target identity mismatch.
+- Nine ready-to-run synthetic SAP operations scenarios through `sao demo`.
+- `sao incident init`, `validate`, and `analyze` workflows.
+- One-CSV `sao quickcheck` path for Excel-style operational lists; it reuses the full Incident Analyzer rather than separate simplified logic.
+- Batch triage over multiple Evidence Packs with CSV/JSON/Markdown summaries.
+- Local read-only Workbench with evidence chain, findings, missing evidence, safe actions, blocked actions and resolution condition.
+- Semantic master-data reconciliation using canonical identity, per-attribute authority and snapshot freshness.
+- Configurable CSV normalizer for SAP/Excel exports with explicit column mappings, constants and value maps; includes a WE02-like demo with status mapping.
+- Machine-readable schemas for Evidence Pack and reconciliation manifests.
+- Privacy-safe practical field-report GitHub issue template.
+- Dedicated `SAO practical toolkit` GitHub Actions workflow exercising the installed CLI end to end.
+
+### Product principles established
+
+- local-first core workflow;
+- no SAP credentials required for file-based use;
+- no LLM required for deterministic diagnosis;
+- read-only by default;
+- technical success is not accepted as business success without a verified postcondition;
+- historical successful messages do not prove a newer change replicated;
+- replay is blocked when event-time identity/mapping semantics are unresolved;
+- explicit mappings are preferred to unsafe automatic guessing of export columns;
+- connectors should populate stable evidence semantics rather than define product logic.
+
+### Known limits
+
+- File/CSV workflows are the practical alpha; no live SAP or Cloud ALM collector is claimed yet.
+- Evidence Pack v0.1 currently focuses on a single bounded object/change investigation; more complex multi-object/process semantics will evolve from field reports.
+- Reconciliation v0.1 does not yet model value-mapping history, pending governance state, or scoped exceptions in the practical CLI.
+- Workbench is a local read-only evidence view, not an incident-management system.
+- The project is independent and is not an official SAP product or certification.
 
 ## Unreleased — toward SAO-Bench 0.3
 
