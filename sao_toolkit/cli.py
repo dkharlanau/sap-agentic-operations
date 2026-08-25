@@ -5,25 +5,30 @@ import json
 import sys
 from pathlib import Path
 
-from .demo import create_demo_pack
+from .demo import create_demo_pack, scenario_names
 from .evidence import EvidencePackError, load_pack, pack_summary
 from .incident import analyze_incident
 from .reporting import write_incident_outputs
 
 
 def cmd_demo(args: argparse.Namespace) -> int:
+    if args.list:
+        for name in scenario_names():
+            print(name)
+        return 0
     try:
-        root = create_demo_pack(args.output, force=args.force)
+        root = create_demo_pack(args.output, scenario=args.scenario, force=args.force)
         report = analyze_incident(load_pack(root))
     except (ValueError, EvidencePackError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     json_path, md_path = write_incident_outputs(report, root / "sao-output")
     print("SAO practical demo created and analyzed")
-    print(f"pack:   {root}")
-    print(f"result: {report['classification']}")
-    print(f"report: {md_path}")
-    print(f"json:   {json_path}")
+    print(f"scenario: {args.scenario}")
+    print(f"pack:     {root}")
+    print(f"result:   {report['classification']}")
+    print(f"report:   {md_path}")
+    print(f"json:     {json_path}")
     return 0
 
 
@@ -72,9 +77,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("demo", help="create and analyze a ready-to-run SAP replication example")
+    p = sub.add_parser("demo", help="create and analyze a ready-to-run SAP operations scenario")
+    p.add_argument("--scenario", default="missing-current-event", choices=scenario_names())
     p.add_argument("--output", default="sao-demo")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--list", action="store_true", help="list available scenarios")
     p.set_defaults(func=cmd_demo)
 
     incident = sub.add_parser("incident", help="validate or analyze an Evidence Pack")
