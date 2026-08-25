@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/decision.schema.json",
+  "title": "SAP Agentic Operations Decision",
+  "type": "object",
+  "required": ["id", "status", "findings", "actions", "execution_allowed"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": ["resolved_read_only", "recommendation", "approval_required", "insufficient_evidence", "policy_blocked", "approved_for_execution", "execution_result"]
+    },
+    "risk_tier": {"type": "string", "enum": ["R0", "R1", "R2", "R3", "R4"]},
+    "findings": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "execution_allowed": {"type": "boolean"},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "missing_evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "classification": {"type": "string"},
+    "blocking_condition": {"type": "string"},
+    "outcome": {"type": "string"},
+    "write_envelope_ref": {"type": ["string", "null"]},
+    "correlation_id": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"enum": ["insufficient_evidence", "policy_blocked", "approval_required"]}}},
+      "then": {"properties": {"execution_allowed": {"const": false}}}
+    },
+    {
+      "if": {"properties": {"execution_allowed": {"const": true}}},
+      "then": {"required": ["write_envelope_ref", "correlation_id"]}
+    }
+  ],
+  "additionalProperties": true
+}
