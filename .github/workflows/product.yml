@@ -29,7 +29,6 @@ jobs:
           import json
           import subprocess
           from pathlib import Path
-
           expected = {
               'missing-current-event': 'current_outbound_event_not_proven',
               'business-rejection': 'business_processing_rejection',
@@ -43,11 +42,8 @@ jobs:
           }
           for scenario, classification in expected.items():
               root = Path('/tmp') / f'sao-{scenario}'
-              subprocess.run([
-                  'sao', 'demo', '--scenario', scenario,
-                  '--output', str(root), '--force'
-              ], check=True)
-              report = json.loads((root / 'sao-output' / 'incident-report.json').read_text())
+              subprocess.run(['sao','demo','--scenario',scenario,'--output',str(root),'--force'], check=True)
+              report = json.loads((root/'sao-output'/'incident-report.json').read_text())
               assert report['classification'] == classification, (scenario, report)
               assert report['execution_allowed'] is False
           print(f'all {len(expected)} practical scenarios: OK')
@@ -68,6 +64,16 @@ jobs:
             --authority-system MDG \
             --attribute tax_class
           sao incident validate /tmp/sao-new-incident
+
+      - name: Run one-CSV Quick Check
+        run: |
+          sao quickcheck demo \
+            --output /tmp/sao-quickcheck.csv \
+            --report-output /tmp/sao-quickcheck-output
+          grep -q "current_outbound_event_not_proven" /tmp/sao-quickcheck-output/quickcheck-report.csv
+          grep -q "business_processing_rejection" /tmp/sao-quickcheck-output/quickcheck-report.csv
+          grep -q "business_state_verified" /tmp/sao-quickcheck-output/quickcheck-report.csv
+          sao quickcheck analyze /tmp/sao-quickcheck.csv --output /tmp/sao-quickcheck-reanalysis
 
       - name: Batch triage multiple Evidence Packs
         run: |
@@ -116,6 +122,7 @@ jobs:
             /tmp/sao-missing-current-event/sao-output/incident-report.json
             /tmp/sao-missing-current-event/sao-output/incident-report.md
             /tmp/sao-workbench.html
+            /tmp/sao-quickcheck-output/quickcheck-report.csv
             /tmp/sao-batch-report/batch-report.csv
             /tmp/sao-batch-report/batch-report.md
             /tmp/sao-reconcile/sao-output/reconciliation-report.csv
