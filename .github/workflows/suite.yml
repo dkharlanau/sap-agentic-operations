@@ -26,6 +26,11 @@ jobs:
       - name: Validate benchmark contracts and coverage
         run: python scripts/validate_suite_contracts.py
 
+      - name: Audit benchmark corpus for release readiness
+        run: |
+          python scripts/audit_corpus.py --require-cases 50
+          python scripts/audit_corpus.py --require-cases 50 --json --output sao-corpus-audit.json
+
       - name: Validate experiment provenance
         run: python scripts/validate_experiments.py
 
@@ -93,6 +98,7 @@ jobs:
         with:
           name: sao-full-suite-report
           path: |
+            sao-corpus-audit.json
             sao-suite-report.json
             sao-trace-report.json
             sao-assurance-case.json
