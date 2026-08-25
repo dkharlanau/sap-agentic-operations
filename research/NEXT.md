@@ -1,57 +1,109 @@
 # Next Research Agenda
 
-The v0.1 baseline is intentionally small. The next work should increase evidence and evaluability rather than add generic agent features.
+The v0.2 baseline now has an executable benchmark, machine-readable evidence/write contracts, risk taxonomy, source-backed ecosystem research, CI, and a minimal stateful simulator.
 
-## P1 — Executable eval harness
+The next work should increase **scenario depth and external evidence**.
 
-Build a tiny local evaluator that reads `evals/cases.jsonl` and checks structured agent decisions against required and forbidden behaviors.
+## P1 — Expand SAO-Bench to 50 cases
 
-Success means the repository can measure whether an implementation:
+Build focused packs rather than random prompts:
 
-- abstains when evidence is missing;
-- refuses unauthorized execution;
-- resolves identity before comparison;
-- distinguishes deterministic failures from hypotheses;
-- preserves required evidence in its output.
+### Integration Operations
 
-## P1 — Evidence contracts
+- out-of-order messages;
+- duplicate delivery;
+- old-success-vs-new-change causality;
+- target processing success but wrong business state;
+- safe retry vs replay risk;
+- identity/mapping change between messages.
 
-Define a machine-readable evidence envelope with fields such as:
+### Master Data / MDG
 
-- source system / source type;
-- canonical object identity;
-- system-specific identity;
-- observed timestamp;
-- retrieved timestamp;
-- evidence type;
-- content hash or stable reference;
-- sensitivity classification;
-- provenance chain.
+- competing source-of-truth claims;
+- ambiguous BP/customer/vendor identity;
+- value mapping drift;
+- governed-attribute write approval;
+- source update after approval;
+- duplicate candidate resolution.
 
-## P1 — Approval contract
+### O2C / P2P
 
-Add an approval token/record model that binds authorization to an exact object, operation, before-state, expected after-state, approver, and expiry.
+- deterministic incompletion vs generic diagnosis;
+- block release with stale state;
+- partner/master-data dependency;
+- credit/approval dependency;
+- supplier/customer exception routing.
 
-## P2 — Additional synthetic scenarios
+### Security / Agent Runtime
 
-Candidates:
+- prompt injection in tool output;
+- poisoned memory;
+- tool scope escalation;
+- inter-agent message trust;
+- MCP authorization/scope mismatch;
+- cascading action after partial failure.
 
-- P2P supplier/master-data inconsistency;
-- credit or delivery hold with conflicting evidence;
-- duplicate business-partner candidate resolution;
-- cross-system mapping drift;
-- recurring incident memory and recommendation reuse;
-- post-execution verification and rollback failure.
+## P1 — Grow the stateful simulator
 
-## P2 — Source-backed research
+Add:
 
-Track current work on:
+- event/message ledger;
+- canonical identity registry;
+- deterministic fault injection;
+- policy changes at runtime;
+- message retry/idempotency;
+- concurrent state changes;
+- compensation flow;
+- audit export.
 
-- enterprise-agent authorization and policy enforcement;
-- MCP/tool security and least-capability patterns;
-- agent evaluation for state-changing workflows;
-- provenance and auditability;
-- human approval patterns;
-- enterprise observability for agent decisions.
+The simulator should remain deliberately smaller than an ERP. It models enterprise control failures, not SAP functionality.
 
-Research should change an architecture, contract, scenario, or eval. Avoid collecting links without a decision consequence.
+## P1 — Generated benchmark variants
+
+Public cases are easy to memorize. Create deterministic generators that vary:
+
+- object IDs;
+- timestamps;
+- order of evidence;
+- missing fields;
+- authority assignments;
+- stale versions;
+- untrusted injected text.
+
+This enables stronger evaluation without hiding a private dataset.
+
+## P2 — Runtime adapters
+
+Build thin proof adapters for at least two runtimes. Good candidates:
+
+- LangGraph or Pydantic AI as an open pro-code baseline;
+- n8n as an orchestration baseline;
+- Joule Studio when a suitable public/test environment is available.
+
+Adapters should emit SAO decisions; they should not fork the benchmark.
+
+## P2 — Conformance profiles
+
+Define minimum requirements for:
+
+- `SAO-Diagnostic`;
+- `SAO-Approval`;
+- `SAO-Write-Safe`;
+- `SAO-Auditable`;
+- `SAO-Adversarial`.
+
+## P2 — External review
+
+Seek concrete critique from:
+
+- SAP/BTP/Joule practitioners;
+- SAP AMS/MDG/integration leads;
+- enterprise architects;
+- MCP implementers;
+- agent-security practitioners.
+
+Track disagreements as cases or contract changes rather than collecting endorsements.
+
+## Research rule
+
+New research should answer a design question and change an artifact. Avoid link catalogs without a decision consequence.
