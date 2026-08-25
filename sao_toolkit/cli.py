@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .batch import analyze_batch, write_batch_outputs
 from .demo import create_demo_pack, scenario_names
 from .evidence import EvidencePackError, create_empty_pack, load_pack, pack_summary
 from .incident import analyze_incident
@@ -94,6 +95,23 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_batch(args: argparse.Namespace) -> int:
+    report = analyze_batch(args.root)
+    outputs = write_batch_outputs(report, args.output)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print(f"SAO batch triage: {report['incidents']} incident(s)")
+        print(f"resolved: {report['resolved']}")
+        print(f"need attention: {report['needs_attention']}")
+        for classification, count in report["by_classification"].items():
+            print(f"  {classification}: {count}")
+        print(f"csv:      {outputs['csv']}")
+        print(f"markdown: {outputs['markdown']}")
+        print(f"json:     {outputs['json']}")
+    return 0
+
+
 def cmd_workbench(args: argparse.Namespace) -> int:
     try:
         if args.output:
@@ -151,6 +169,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_analyze)
+
+    p = sub.add_parser("batch", help="triage a directory containing multiple Evidence Packs")
+    p.add_argument("root")
+    p.add_argument("--output", default="sao-batch-output")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_batch)
 
     p = sub.add_parser("workbench", help="view an Evidence Pack as a local read-only incident workbench")
     p.add_argument("pack")
