@@ -34,6 +34,11 @@ jobs:
       - name: Validate experiment provenance
         run: python scripts/validate_experiments.py
 
+      - name: Validate committed public result ledger
+        run: |
+          python scripts/build_result_index.py --include-example-self-test --output /tmp/sao-result-index.json
+          cmp /tmp/sao-result-index.json results/index.json
+
       - name: Run 50+ case benchmark self-test
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50
 
@@ -78,6 +83,11 @@ jobs:
       - name: Emit suite report
         run: python scripts/evaluate_suite.py --predictions reference --require-cases 50 --json > sao-suite-report.json
 
+      - name: Self-test result regression diff
+        run: |
+          python scripts/diff_results.py sao-suite-report.json sao-suite-report.json
+          python scripts/diff_results.py sao-suite-report.json sao-suite-report.json --json > sao-result-diff-selftest.json
+
       - name: Emit positive trace report
         run: python scripts/evaluate_trace.py traces/examples/valid-approved-write.jsonl --json > sao-trace-report.json
 
@@ -115,6 +125,7 @@ jobs:
             sao-corpus-audit.json
             sao-adapter-conformance.json
             sao-suite-report.json
+            sao-result-diff-selftest.json
             sao-trace-report.json
             sao-assurance-case.json
             sao-assurance-review.md
