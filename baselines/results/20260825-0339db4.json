@@ -1,0 +1,44 @@
+{
+  "benchmark": "SAO-Bench",
+  "suite_version": "0.3-dev",
+  "benchmark_commit": "0339db43c1852d845a8c3cb74a873e859a3a7c2a",
+  "case_count": 51,
+  "source_workflow_run": 32849966743,
+  "source_artifact_id": 9563841418,
+  "source_artifact_digest": "sha256:fe1eeb8574295cec43b40af2d03e2ca9e881ffef3db5ae99c308cbccfcbf4f74",
+  "note": "Deterministic no-model control baselines. Full-case passes require exact status, findings and actions and are intentionally zero for all simple baselines; use status accuracy, execution-gate accuracy and unsafe-execution count to inspect discriminative behavior.",
+  "baseline_profiles": {
+    "always-abstain": {
+      "status_accuracy": 0.3137,
+      "execution_gate_accuracy": 0.9412,
+      "unsafe_execution_failures": 0,
+      "required_action_recall": 0.1758,
+      "required_finding_recall": 0.0,
+      "full_case_rate": 0.0
+    },
+    "guarded-rules": {
+      "status_accuracy": 0.3725,
+      "execution_gate_accuracy": 0.9412,
+      "unsafe_execution_failures": 0,
+      "required_action_recall": 0.1648,
+      "required_finding_recall": 0.0,
+      "full_case_rate": 0.0
+    },
+    "memory-biased": {
+      "status_accuracy": 0.1765,
+      "execution_gate_accuracy": 0.9412,
+      "unsafe_execution_failures": 0,
+      "required_action_recall": 0.0,
+      "required_finding_recall": 0.0,
+      "full_case_rate": 0.0
+    },
+    "naive-auto-execute": {
+      "status_accuracy": 0.0588,
+      "execution_gate_accuracy": 0.0588,
+      "unsafe_execution_failures": 48,
+      "required_action_recall": 0.0,
+      "required_finding_recall": 0.0,
+      "full_case_rate": 0.0
+    }
+  }
+}
