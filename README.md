@@ -1,160 +1,233 @@
-# SAP Agentic Operations
+# SAP Agentic Operations (SAO)
 
-**Reference architectures, safety patterns and evaluation scenarios for AI agents around SAP enterprise operations.**
+[![SAO benchmark](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/evals.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/evals.yml)
+
+**An executable reference lab for agents that reason around SAP and enterprise systems of record.**
 
 Maintained by **Dzmitryi Kharlanau** — SAP Transformation · Enterprise Operations · Agentic AI.
 
-This repository explores how AI agents can support SAP-heavy enterprise operations without treating an ERP system like a chatbot backend.
+Status: **experimental v0.2-dev**.
 
-The focus is not on autonomous demos. It is on the difficult enterprise boundaries: identity, authorization, evidence, deterministic controls, human approval, observability, data quality, rollback, and knowing when an agent should abstain.
+Most agent demos prove that an LLM can call a tool. SAO asks a harder question:
 
-## Why this repository exists
+> **Can we prove that an agent knows when it may read, reason, request approval, execute, abstain, and verify a business outcome?**
 
-Enterprise AI around SAP is not mainly a prompt-engineering problem.
+The project uses SAP-shaped synthetic operations as a proving ground for enterprise-agent control: identity, evidence, source-of-truth authority, deterministic rules, authorization, tool scope, approvals, stale state, idempotency, postconditions, provenance, rollback, and adversarial inputs.
 
-A useful agent must operate inside a system of controls:
+No SAP tenant is required. No client data belongs here.
 
-- business identity must be resolved before records are compared;
-- evidence must be traceable across systems and messages;
-- read, recommend, approve, and execute capabilities must remain distinct;
-- deterministic validation should win when rules are known;
-- uncertain reasoning should produce recommendations, not silent mutations;
-- write operations need authorization, approval, auditability, and rollback;
-- incomplete or contradictory evidence must lead to abstention or escalation.
+## Why this project now
 
-This repository turns those constraints into reusable architectures, scenarios, contracts, and eval cases.
+The SAP ecosystem itself is moving toward a world of Joule Agents, Joule Studio, MCP tools, managed agent runtimes, and SAP AI Agent Hub governance. The durable problem is therefore not another agent framework. It is the control boundary between probabilistic reasoning and mission-critical enterprise state.
 
-## Scope
+See the source-backed snapshot: [`research/state-of-practice-2026-08.md`](research/state-of-practice-2026-08.md).
 
-- SAP AMS and incident diagnostics
-- SAP SD/MM operational support patterns
-- customer, vendor, business partner, master data, and MDG scenarios
-- IDoc, API, middleware, and interface failures
-- O2C and P2P investigation patterns
-- cross-system identity resolution
-- agent-to-tool and MCP-style boundaries
-- deterministic vs agentic decision rules
-- human approval and escalation
-- evaluation, evidence, and abstention
-- observability, auditability, and rollback
-- operational memory for recurring enterprise incidents
-
-## Non-goals
-
-- no client data or production exports
-- no credentials, internal URLs, ticket IDs, or proprietary configuration
-- no instructions for bypassing SAP authorization
-- no assumption that an LLM should directly mutate ERP state
-- no generic multi-agent demo without an enterprise control problem
-- no claim that AI should replace deterministic business rules
-
-## Core principle
-
-> Use agents where uncertainty requires reasoning; use deterministic controls where enterprise state requires guarantees.
-
-## Capability model
-
-The default operating model separates four levels:
-
-| Level | Meaning | Default posture |
-|---|---|---|
-| **Read** | Retrieve approved evidence | Can be automated with access controls |
-| **Recommend** | Diagnose, compare, propose next action | Agentic reasoning is useful here |
-| **Approve** | Validate business impact and authorize change | Human or deterministic policy gate |
-| **Execute** | Change enterprise state | Narrow tools, explicit authorization, audit and rollback |
-
-See [`contracts/capability-model.md`](contracts/capability-model.md).
-
-## Reference architecture
-
-The baseline architecture keeps the LLM outside the system-of-record boundary:
+SAO is designed to sit across implementations rather than compete with them:
 
 ```text
-User / Operations
-       |
-       v
-Agent / Orchestrator
-       |
-       +---- Evidence layer ----> logs / IDocs / APIs / master data views
-       |
-       +---- Deterministic controls ----> schemas / rules / policies / identity mapping
-       |
-       +---- Recommendation ----> diagnosis + evidence + confidence + proposed action
-       |
-       v
-Approval boundary
-       |
-       v
-Narrow execution tool
-       |
-       v
-SAP / enterprise system of record
-       |
-       +---- audit event / result / rollback reference
+ Joule Studio / LangGraph / Pydantic AI / n8n / custom agent
+                              |
+                              v
+                     SAO Decision Contract
+                              |
+        +----------+----------+----------+----------+
+        | identity | evidence | policy   | risk     |
+        +----------+----------+----------+----------+
+                              |
+                              v
+                    State-Change Envelope
+                              |
+                              v
+                    MCP / Skill / API / Tool
+                              |
+                              v
+                    SAP / system of record
+                              |
+                              v
+                       Verify + Audit
 ```
 
-The agent can reason broadly; its tools should remain narrow.
+## Four project surfaces
 
-See [`architectures/reference-architecture.md`](architectures/reference-architecture.md).
+### 1. SAO Control Plane
 
-## Initial scenarios
+A vendor-neutral architecture that separates:
 
-1. [`IDoc / interface failure triage`](scenarios/001-idoc-interface-triage.md) — diagnose without autonomous mutation.
-2. [`MDG / master-data discrepancy`](scenarios/002-mdg-master-data-discrepancy.md) — resolve identity before comparing source and target state.
-3. [`O2C order-block investigation`](scenarios/003-o2c-order-block.md) — separate deterministic checks from uncertain root-cause reasoning.
+- identity;
+- evidence and provenance;
+- deterministic policy;
+- probabilistic reasoning;
+- capability level;
+- approval;
+- execution;
+- postcondition verification.
 
-Each scenario defines evidence, allowed capabilities, failure modes, abstention criteria, and an expected decision path.
+Start with [`docs/CONTROL-PLANE.md`](docs/CONTROL-PLANE.md).
 
-## Evaluation
+### 2. SAO-Bench
 
-`evals/cases.jsonl` contains small synthetic cases designed to test decisions rather than prose quality.
+An executable benchmark for enterprise control decisions.
 
-An implementation should be evaluated on questions such as:
+Current cases test whether an implementation:
 
-- Did it retrieve enough evidence before diagnosing?
-- Did it distinguish source identity from target identity?
-- Did it avoid execution when authorization or evidence was missing?
-- Did it route deterministic checks to deterministic logic?
-- Did it cite contradictory evidence instead of hiding it?
-- Did it abstain when the safe action was unclear?
+- refuses cross-system comparison on unresolved identity;
+- recognizes that an old successful message does not prove a newer change replicated;
+- distinguishes transport success from business-state success;
+- refuses to invent the source of truth for master data;
+- does not resolve ambiguous BP identity from similarity alone;
+- follows deterministic O2C evidence instead of generating generic root-cause lists;
+- ignores instructions embedded in untrusted tool output;
+- refuses stale operational memory;
+- requires approval for governed writes;
+- invalidates approval when the before-state changes;
+- refuses capability escalation after a typed tool fails;
+- verifies business postconditions after a write;
+- preserves evidence references for auditability.
+
+Run the self-test:
+
+```bash
+python scripts/evaluate.py --predictions evals/predictions.reference.jsonl
+```
+
+The reference predictions prove the harness, not model intelligence. See [`docs/BENCHMARK.md`](docs/BENCHMARK.md) and [`evals/README.md`](evals/README.md).
+
+### 3. Synthetic Enterprise Simulator
+
+SAO includes a small stateful sandbox rather than pretending to emulate S/4HANA.
+
+It currently models a synthetic sales-order state change and tests:
+
+- missing approval → reject;
+- stale before-state → reject;
+- exact approved operation → execute;
+- postcondition → verify;
+- duplicate idempotency key → do not mutate twice.
+
+Run:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The simulator is the path toward reproducible race-condition, stale-state, retry, compensation, and multi-agent experiments without a real ERP landscape.
+
+### 4. Machine-readable contracts
+
+The project defines schemas for:
+
+- [`schemas/decision.schema.json`](schemas/decision.schema.json) — agent decision output;
+- [`schemas/evidence.schema.json`](schemas/evidence.schema.json) — evidence/provenance envelope;
+- [`schemas/write-envelope.schema.json`](schemas/write-envelope.schema.json) — state-change safety envelope.
+
+Human-readable contracts explain the design:
+
+- [`contracts/capability-model.md`](contracts/capability-model.md)
+- [`contracts/evidence-envelope.md`](contracts/evidence-envelope.md)
+- [`contracts/write-safety-envelope.md`](contracts/write-safety-envelope.md)
+
+## Core operating model
+
+```text
+READ -> RECOMMEND -> APPROVE -> EXECUTE
+```
+
+These are different capability classes, not steps an agent may silently escalate through.
+
+| Capability | Meaning | Default posture |
+|---|---|---|
+| **Read** | retrieve approved evidence | automatable with access controls |
+| **Recommend** | correlate, diagnose, explain, propose | where agentic reasoning adds most value |
+| **Approve** | authorize a specific state change | human or deterministic policy boundary |
+| **Execute** | mutate enterprise state | narrow typed tool + safety envelope + verification |
+
+## Risk model
+
+SAO separates business impact from agentic threat class.
+
+Business tiers:
+
+- **R0** informational
+- **R1** diagnostic
+- **R2** reversible operational change
+- **R3** material business-state change
+- **R4** high-impact / irreversible / regulated
+
+Threat classes currently cover goal hijacking, tool misuse, identity/privilege abuse, memory poisoning, insecure communication, cascading failure, trust exploitation, stale-state execution, verification failure, and provenance loss.
+
+See [`docs/RISK-MODEL.md`](docs/RISK-MODEL.md).
+
+## Design invariants
+
+1. **Identity before comparison.**
+2. **Evidence before diagnosis.**
+3. **Deterministic rules before probabilistic reasoning.**
+4. **Recommendation is not authorization.**
+5. **Authorization is not execution.**
+6. **Every write is bound to exact current state.**
+7. **Model confidence never grants capability.**
+8. **Evidence channels never become instruction channels.**
+9. **`insufficient_evidence` and `policy_blocked` are successful safe outcomes.**
+10. **API success is not business success until postconditions are verified.**
+11. **A tool failure never authorizes a broader tool.**
+12. **A write without audit and compensation/rollback thinking is incomplete.**
+
+## Initial SAP-shaped scenario packs
+
+- [`scenarios/001-idoc-interface-triage.md`](scenarios/001-idoc-interface-triage.md)
+- [`scenarios/002-mdg-master-data-discrepancy.md`](scenarios/002-mdg-master-data-discrepancy.md)
+- [`scenarios/003-o2c-order-block.md`](scenarios/003-o2c-order-block.md)
+
+These are synthetic abstractions of enterprise support problems. They are not reproductions of a client landscape and do not replace SAP documentation.
+
+## How this differs from an SAP agent demo
+
+SAO intentionally does **not** try to prove that an LLM can call RFC, OData, GUI automation, or a generic MCP server.
+
+The project is stronger when it can answer questions such as:
+
+- Which identity did the agent actually act on?
+- Which system was authoritative for this attribute?
+- Which observations were current at decision time?
+- Was a tool response treated as evidence or as an instruction?
+- Which policy granted capability?
+- Was approval bound to the exact before-state?
+- What happens if state changes between approval and execution?
+- How is duplicate execution prevented?
+- What business postcondition proves success?
+- What evidence lets an auditor reconstruct the decision?
+
+That is the layer the repository is intended to make executable.
 
 ## Repository map
 
-- [`architectures/`](architectures/) — system boundaries and reference architectures
-- [`contracts/`](contracts/) — capability, approval, evidence, and tool contracts
-- [`patterns/`](patterns/) — reusable enterprise-agent operating patterns
-- [`scenarios/`](scenarios/) — synthetic SAP / enterprise operational cases
-- [`evals/`](evals/) — machine-readable evaluation cases
-- [`research/`](research/) — source-backed research notes and evidence policy
+- [`docs/`](docs/) — control plane, risk model, benchmark, SAP ecosystem mapping
+- [`architectures/`](architectures/) — reference system boundaries
+- [`contracts/`](contracts/) — capability, evidence, approval and execution contracts
+- [`schemas/`](schemas/) — machine-readable contracts
+- [`patterns/`](patterns/) — reusable operating patterns
+- [`scenarios/`](scenarios/) — synthetic SAP/enterprise cases
+- [`evals/`](evals/) — SAO-Bench cases and reference outputs
+- [`scripts/evaluate.py`](scripts/evaluate.py) — deterministic benchmark runner
+- [`simulator/`](simulator/) — synthetic stateful enterprise sandbox
+- [`tests/`](tests/) — safety invariants for state change
+- [`research/`](research/) — evidence-backed architecture research
+- [`ROADMAP.md`](ROADMAP.md) — path toward scenario packs, runtime adapters and conformance profiles
+- [`AGENTS.md`](AGENTS.md) — engineering constitution for future agent-assisted changes
 
-## Design principles
+## Current direction
 
-1. **Evidence before action.** A diagnosis without evidence is a hypothesis.
-2. **Identity before comparison.** Cross-system records must be resolved before state is compared.
-3. **Deterministic before agentic.** Known rules belong in code, schemas, or policy engines.
-4. **Least capability.** Give an agent the smallest tool surface needed for the task.
-5. **Separate recommendation from execution.** Reasoning and mutation are different risk classes.
-6. **Make abstention explicit.** `insufficient_evidence` is a valid result.
-7. **Preserve provenance.** Every important conclusion should point back to observable evidence.
-8. **Design for rollback.** A write path without a recovery path is incomplete.
-9. **Audit the decision, not only the API call.** Preserve what evidence led to the action.
-10. **Synthetic public examples only.** Enterprise learning must not leak enterprise data.
+The next meaningful milestone is not more prose. It is expanding the synthetic state machine and benchmark to 50–100 cases across integration operations, MDG/master data, O2C/P2P, MCP/tool security, approvals, memory, race conditions, postconditions, and compensation.
 
-## v0.1 baseline
+Then small adapters can demonstrate the same SAO contract from Joule Studio, LangGraph, n8n, Pydantic AI or custom orchestration without coupling the benchmark to any framework.
 
-The initial reference baseline now includes:
+See [`ROADMAP.md`](ROADMAP.md).
 
-- one enterprise-agent reference architecture;
-- a deterministic-vs-agentic decision matrix;
-- a Read → Recommend → Approve → Execute capability model;
-- three synthetic SAP operational scenarios;
-- machine-readable eval cases;
-- explicit abstention and escalation criteria;
-- security and authorization boundaries;
-- research/evidence policy;
-- citation metadata and Apache-2.0 licensing.
+## SAP ecosystem mapping
 
-The next phase should deepen evidence and executable evaluation rather than broaden the repository with generic agent features.
+[`docs/SAP-MAPPING.md`](docs/SAP-MAPPING.md) explains how SAO's vendor-neutral controls relate conceptually to current SAP surfaces such as Joule Studio, Joule Skills/MCP, SAP AI Agent Hub, SAP LeanIX, process context and runtime governance.
+
+SAO is independent work and is not an official SAP project.
 
 ## Author
 
