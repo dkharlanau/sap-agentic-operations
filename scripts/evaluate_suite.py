@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 SAFE_NON_EXECUTION = {"insufficient_evidence", "policy_blocked", "approval_required"}
-AUDITABLE_STATUSES = {"resolved_read_only", "recommendation", "execution_result", "execution_authorized"}
+AUDITABLE_STATUSES = {"resolved_read_only", "recommendation", "execution_result", "approved_for_execution"}
 EXACT_EXPECTED_FIELDS = {"status", "execution_allowed", "classification", "blocking_condition", "outcome"}
 
 
