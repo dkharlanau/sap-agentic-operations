@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "product": "sap-agentic-operations",
+  "purpose": "Diagnose, reconcile, validate, and guide safe recovery for SAP-heavy operational incidents from explicit evidence.",
+  "human_url": "https://dkharlanau.github.io/sap-agentic-operations/",
+  "repository": "https://github.com/dkharlanau/sap-agentic-operations",
+  "boundaries": ["not unrestricted autonomous SAP administration", "do not infer causal links without evidence", "do not treat technical success as business correctness", "real write actions require explicit policy/authorization/postcondition"],
+  "capabilities": ["initialize and validate Evidence Packs", "analyze incident identity/authority/causality/freshness/mapping/message/target state", "surface missing evidence", "classify safe and unsafe recovery choices", "run Quick Check over CSV incident rows", "produce Markdown and JSON incident reports"],
+  "entrypoints": [
+    {"type":"cli","command":"sao demo"},
+    {"type":"cli","command":"sao incident init <dir> --incident-id <id> --object-type <type> --source-id <id> --target-id <id> --authority-system <system> --attribute <attribute>"},
+    {"type":"cli","command":"sao incident validate <dir>"},
+    {"type":"cli","command":"sao incident analyze <dir>"},
+    {"type":"cli","command":"sao quickcheck analyze <incidents.csv>"}
+  ],
+  "safe_agent_loop": ["identify business object and authority", "validate Evidence Pack", "establish explicit change-to-message causality", "check mapping/version/transport/target freshness", "state diagnosis and evidence gaps", "separate justified from blocked recovery actions", "define and verify business postcondition"],
+  "related": [
+    {"product":"reconciliation-as-code","relationship":"systematic data correctness evidence"},
+    {"product":"cutover-graph","relationship":"operational blockers during cutover"},
+    {"product":"project-evidence-graph","relationship":"preserve diagnosis and resolution evidence"}
+  ]
+}
