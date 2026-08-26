@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dkharlanau/sap-agentic-operations/schemas/artifact-ref.schema.json",
+  "title": "Enterprise-as-Code Artifact Reference",
+  "type": "object",
+  "required": ["ref"],
+  "properties": {
+    "ref": {
+      "type": "string",
+      "pattern": "^eac://[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*/[^?#]+(?:\\?version=[^#]+)?$"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "repository": {"type": "string"},
+        "path": {"type": ["string", "null"]},
+        "revision": {"type": ["string", "null"]},
+        "url": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
