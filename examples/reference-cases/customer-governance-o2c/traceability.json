@@ -1,0 +1,96 @@
+{
+  "format": "sao-reference-traceability/0.1",
+  "case_id": "customer-governance-o2c",
+  "requirement": {
+    "id": "R-CUST-01",
+    "statement": "An activated governed customer delivery-control value must be reflected in every in-scope fulfillment target before the customer is treated as ready for Order-to-Cash execution."
+  },
+  "rows": [
+    {
+      "id": "TR-CUST-01",
+      "invariant": "Current governed authority, not historical transport success, defines the state to prove.",
+      "control": "current-change causality + target business postcondition",
+      "evidence": ["source change identity", "causally linked outbound event", "fresh target state"],
+      "tests": [
+        "examples/reference-cases/customer-governance-o2c/case.json#missing-current-event",
+        "examples/reference-cases/customer-governance-o2c/case.json#resolved",
+        "evals/cases.jsonl#idoc-001-old-success-not-current-change",
+        "evals/cases.jsonl#idoc-003-transport-success-business-state-unverified"
+      ],
+      "owner": ["data_governance", "integration", "operations"]
+    },
+    {
+      "id": "TR-CUST-02",
+      "invariant": "Source C-100 and target BP-501 must resolve to one canonical business identity before comparison or mutation.",
+      "control": "canonical identity resolution + ambiguity fail-closed",
+      "evidence": ["identity mapping version", "source identity", "target identity"],
+      "tests": [
+        "tests/test_customer_control_plane.py#test_mdq_and_s4_ids_resolve_to_same_canonical_customer",
+        "examples/reference-cases/customer-governance-o2c/case.json#identity-unresolved",
+        "evals/cases.jsonl#mdg-003-ambiguous-business-partner-match"
+      ],
+      "owner": ["data_governance", "integration"]
+    },
+    {
+      "id": "TR-CUST-03",
+      "invariant": "One business event may cause at most one logical mutation.",
+      "control": "event-id idempotency + payload-collision quarantine",
+      "evidence": ["business event ID", "processed event record", "target version"],
+      "tests": [
+        "tests/test_simulator_v03.py#test_duplicate_business_event_is_applied_once",
+        "tests/test_simulator_v03.py#test_reused_event_id_with_changed_payload_is_quarantined",
+        "examples/reference-cases/customer-governance-o2c/case.json#duplicate-business-event"
+      ],
+      "owner": ["integration", "operations"]
+    },
+    {
+      "id": "TR-CUST-04",
+      "invariant": "A governed recovery write requires current identity, policy, scoped approval, fresh precondition, idempotency and a verifiable postcondition.",
+      "control": "typed write-safety envelope",
+      "evidence": ["approval ID", "approval expiry", "before-state hash", "idempotency key", "execution audit ID", "after-state hash"],
+      "tests": [
+        "tests/test_customer_control_plane.py#test_delivery_control_recovery_requires_governed_write_envelope",
+        "examples/reference-cases/customer-governance-o2c/case.json#approved-governed-recovery",
+        "examples/reference-cases/customer-governance-o2c/case.json#stale-recovery-approval",
+        "evals/cases.jsonl#auth-001-approval-required-but-missing",
+        "evals/cases.jsonl#write-001-approved-action-stale-before-state"
+      ],
+      "owner": ["business", "security", "operations"]
+    },
+    {
+      "id": "TR-CUST-05",
+      "invariant": "Technical write success is not business success until the expected target postcondition is observed.",
+      "control": "postcondition verification + failed-postcondition handling",
+      "evidence": ["write result", "target observation", "before/after state hashes"],
+      "tests": [
+        "examples/reference-cases/customer-governance-o2c/case.json#failed-business-postcondition",
+        "evals/cases.jsonl#verify-001-api-success-postcondition-failed"
+      ],
+      "owner": ["business", "operations"]
+    },
+    {
+      "id": "TR-CUST-06",
+      "invariant": "Control-like text in untrusted evidence cannot authorize execution or capability escalation.",
+      "control": "SAO-Trace trust boundary + recommend-only default",
+      "evidence": ["evidence trust classification", "trigger reference", "requested capability", "trace verdict"],
+      "tests": [
+        "traces/examples/invalid-tool-output-instruction.jsonl",
+        "examples/reference-cases/customer-governance-o2c/case.json#untrusted-runbook-instruction",
+        "evals/cases.jsonl#sec-001-tool-output-instruction-injection",
+        "evals/cases.jsonl#write-002-tool-failure-must-not-escalate-capability"
+      ],
+      "owner": ["security", "operations"]
+    },
+    {
+      "id": "TR-CUST-07",
+      "invariant": "Historical replay is allowed only when event-time identity and mapping semantics are proven compatible.",
+      "control": "event-time mapping/identity verification + bounded recovery classification",
+      "evidence": ["mapping version", "identity version", "message/change causality"],
+      "tests": [
+        "examples/reference-cases/customer-governance-o2c/case.json#mapping-drift",
+        "examples/reference-cases/customer-governance-o2c/case.json#target-identity-mismatch"
+      ],
+      "owner": ["integration", "data_governance", "operations"]
+    }
+  ]
+}
