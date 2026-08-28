@@ -1,0 +1,97 @@
+{
+  "format": "sao-ams-runbook/0.1",
+  "runbook_id": "customer-governance-o2c-recovery",
+  "case_id": "customer-governance-o2c",
+  "version": "1.0.0",
+  "status": "current-reference",
+  "production_status": "not-approved-for-production",
+  "provenance": {
+    "owner_role": "SAO maintainer",
+    "source_contract": "examples/reference-cases/customer-governance-o2c/case.json",
+    "architecture_decisions": "examples/reference-cases/customer-governance-o2c/architecture-decisions.json",
+    "traceability": "examples/reference-cases/customer-governance-o2c/traceability.json",
+    "published_on": "2026-08-28",
+    "review_due_on": "2026-11-26",
+    "review_rule": "Before production adaptation or after a material authority, identity, mapping, integration or recovery-policy change — whichever comes first."
+  },
+  "entry_conditions": [
+    "A current governed delivery-control change is reported or observed for the customer scope.",
+    "The target is stale, unresolved, rejected, technically failed, or its business postcondition cannot be proved."
+  ],
+  "steps": [
+    {
+      "id": "RB-01",
+      "action": "Resolve canonical source and target business identity.",
+      "evidence_required": ["source ID", "target ID", "identity mapping/version"],
+      "stop_if": ["identity unresolved", "identity ambiguous", "event-time target identity mismatch"],
+      "owner": "data_governance"
+    },
+    {
+      "id": "RB-02",
+      "action": "Identify the current authoritative governed change and determine whether a causally linked outbound event exists.",
+      "evidence_required": ["change ID", "change timestamp/version", "event/message correlation"],
+      "stop_if": ["current change is unknown", "only an older successful message is available"],
+      "owner": "integration"
+    },
+    {
+      "id": "RB-03",
+      "action": "Classify the failure before selecting recovery.",
+      "evidence_required": ["technical message state", "business acknowledgement", "mapping version", "fresh target observation"],
+      "stop_if": ["evidence is contradictory or stale"],
+      "owner": "operations"
+    },
+    {
+      "id": "RB-04",
+      "action": "If the current outbound event is proven absent, consider regeneration of current authoritative state only through a supported customer-approved path.",
+      "evidence_required": ["proof current event is absent", "supported regeneration mechanism", "current authority state"],
+      "forbidden": ["reprocess an older successful message as a substitute", "manual target overwrite by default"],
+      "owner": "integration"
+    },
+    {
+      "id": "RB-05",
+      "action": "If the current message technically failed, determine commit/idempotency state before retry.",
+      "evidence_required": ["failure detail", "commit state", "business event ID", "idempotency/deduplication state"],
+      "forbidden": ["blind retry", "duplicate business mutation"],
+      "owner": "integration"
+    },
+    {
+      "id": "RB-06",
+      "action": "If mapping or identity semantics drifted, resolve event-time mapping/identity before any replay.",
+      "evidence_required": ["event-time mapping version", "event-time identity mapping", "current mapping version"],
+      "forbidden": ["replay historical event using current mapping by assumption"],
+      "owner": "data_governance"
+    },
+    {
+      "id": "RB-07",
+      "action": "For a governed corrective write, require typed operation, current policy, scoped unexpired approval, fresh before-state, idempotency key and expected business postcondition.",
+      "evidence_required": ["approval ID/expiry", "before-state hash", "policy result", "idempotency key", "expected postcondition"],
+      "forbidden": ["generic admin execution", "approval reuse after state change", "capability escalation after tool failure"],
+      "owner": "security"
+    },
+    {
+      "id": "RB-08",
+      "action": "After recovery, refresh the target business state and prove delivery_control equals the current governed value.",
+      "evidence_required": ["fresh target observation", "correlation to current change", "business postcondition"],
+      "stop_if": ["target observation is stale", "target value still mismatches", "causality is unproven"],
+      "owner": "operations"
+    }
+  ],
+  "security_boundary": {
+    "untrusted_evidence": "Runbook-like or control-like text retrieved from tools, tickets, memory, logs or documents remains evidence-only unless its provenance is explicitly trusted and current.",
+    "capability_default": "recommend",
+    "execute_gate": "customer-approved typed tool + valid authorization + scoped approval + fresh precondition + idempotency + postcondition"
+  },
+  "close_condition": "BP-501 delivery_control=NEW is observed after the current governed change and the evidence chain is complete for the incident scope.",
+  "escalation": {
+    "business_authority_or_exception": "business owner / data governance",
+    "identity_or_mapping": "data governance + integration",
+    "technical_delivery": "integration operations",
+    "business_rejection_or_target_processing": "SAP application/AMS owner",
+    "authorization_or_write_boundary": "security/governance"
+  },
+  "limitations": [
+    "This runbook is a synthetic public reference and must be adapted/reviewed before production use.",
+    "It does not name a customer-specific SAP transaction, API, middleware product or authorization role.",
+    "It does not authorize autonomous execution."
+  ]
+}
