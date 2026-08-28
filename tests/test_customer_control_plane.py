@@ -47,7 +47,7 @@ def delivery_control_envelope(lab: EnterpriseLab, *, key: str) -> dict:
 
 
 class CustomerControlPlaneTest(unittest.TestCase):
-    def test_mdq_and_s4_ids_resolve_to_same_canonical_customer(self) -> None:
+    def test_mdg_and_s4_ids_resolve_to_same_canonical_customer(self) -> None:
         lab = make_lab()
         self.assertEqual(
             lab.resolve_identity("synthetic-mdg", "C-100")["canonical_id"],

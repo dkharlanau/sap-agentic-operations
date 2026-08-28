@@ -2,7 +2,7 @@
   "format": "sao-reference-case/0.2",
   "id": "customer-governance-o2c",
   "title": "Customer Governance to S/4 Order-to-Cash readiness",
-  "purpose": "Show one business requirement moving through authority, integration, failure diagnosis, governed recovery, control-plane safety and business-state verification without granting an agent autonomous SAP mutation authority.",
+  "purpose": "Show one business requirement moving through authority, architecture, integration, failure diagnosis, governed recovery, control-plane safety, benchmark evidence and business-state verification without granting an agent autonomous SAP mutation authority.",
   "business_requirement": {
     "statement": "When a governed customer delivery-control change becomes current in MDG, every in-scope fulfillment system must converge to that authoritative business state before the customer is treated as ready for Order-to-Cash execution.",
     "attribute": "delivery_control",
@@ -75,6 +75,41 @@
     "docs/SAP-AGENT-TOOL-CONTRACTS.md",
     "contracts/write-safety-envelope.md"
   ],
+  "reference_artifacts": {
+    "enterprise_context": "examples/enterprise-context/customer-replication.json",
+    "architecture_decisions": "examples/reference-cases/customer-governance-o2c/architecture-decisions.json",
+    "traceability": "examples/reference-cases/customer-governance-o2c/traceability.json",
+    "ams_runbook": "examples/reference-cases/customer-governance-o2c/ams-runbook.json"
+  },
+  "benchmark_assurance": {
+    "cases_file": "evals/cases.jsonl",
+    "predictions": "reference",
+    "mapped_case_ids": [
+      "idoc-001-old-success-not-current-change",
+      "idoc-002-identity-unresolved",
+      "idoc-003-transport-success-business-state-unverified",
+      "mdg-002-known-owner-stale-target",
+      "mdg-003-ambiguous-business-partner-match",
+      "sec-001-tool-output-instruction-injection",
+      "auth-001-approval-required-but-missing",
+      "write-001-approved-action-stale-before-state",
+      "write-002-tool-failure-must-not-escalate-capability",
+      "verify-001-api-success-postcondition-failed"
+    ],
+    "dynamic_variants": {
+      "seed": "customer-governance-o2c-public-proof-v1",
+      "per_template": 2,
+      "expected_case_count": 12,
+      "templates": [
+        "stale-approval",
+        "identity-ambiguity",
+        "duplicate-replay",
+        "tool-injection",
+        "postcondition-missing",
+        "policy-memory-drift"
+      ]
+    }
+  },
   "failure_campaign": [
     {
       "scenario": "missing-current-event",
@@ -189,6 +224,7 @@
     "reconciliation": "Cutover readiness requires target business-state evidence, not only technical queue completion."
   },
   "operations_handover": {
+    "runbook": "examples/reference-cases/customer-governance-o2c/ams-runbook.json",
     "monitor": [
       "authoritative changes without causally linked outbound events",
       "duplicate event IDs and event-ID payload collisions",
@@ -208,9 +244,14 @@
     "docs/BUSINESS-TRACEABILITY.md",
     "docs/ARCHITECTURE-FITNESS-FUNCTIONS.md",
     "docs/CUTOVER-RECOVERY.md",
+    "examples/reference-cases/customer-governance-o2c/architecture-decisions.json",
+    "examples/reference-cases/customer-governance-o2c/traceability.json",
+    "examples/reference-cases/customer-governance-o2c/ams-runbook.json",
     "simulator/fixtures/enterprise-v03.json",
     "traces/examples/valid-approved-write.jsonl",
     "traces/examples/invalid-tool-output-instruction.jsonl",
+    "evals/cases.jsonl",
+    "evals/predictions.reference.jsonl",
     "evals/packs/master-data.jsonl",
     "evals/packs/integration-operations.jsonl",
     "evals/packs/state-change.jsonl"

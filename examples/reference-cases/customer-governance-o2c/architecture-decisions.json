@@ -1,0 +1,98 @@
+{
+  "format": "sao-reference-architecture-decisions/0.1",
+  "case_id": "customer-governance-o2c",
+  "status": "reference-only",
+  "decisions": [
+    {
+      "id": "ADR-CUST-001",
+      "title": "Keep the assurance and agent control plane outside SAP core",
+      "status": "accepted-for-reference-case",
+      "concern": "clean-core-and-extension-placement",
+      "context": "The reference case needs evidence collection, reasoning, policy and recovery orchestration without making the demo depend on a custom modification inside S/4HANA or MDG.",
+      "decision": "SAO remains an external evidence and control-plane layer. The public reference case does not require an in-core SAP modification. Any future production write adapter must use a customer-approved SAP interface or extension point and remain behind the same typed approval/precondition/postcondition envelope.",
+      "consequences": [
+        "The reference remains vendor-boundary aware without pretending to provide a production SAP connector.",
+        "SAP authorization stays authoritative for any real side effect.",
+        "The assurance model can be tested without production credentials."
+      ],
+      "non_goals": [
+        "claim that every customer must use the same extension technology",
+        "bypass SAP authorization",
+        "embed a generic unrestricted write tool"
+      ],
+      "reversal_triggers": [
+        "a production requirement cannot be met through an approved interface or extension point",
+        "latency or transactional consistency requires a different placement and the new risk is explicitly reviewed"
+      ],
+      "evidence_refs": [
+        "docs/adr/0002-separate-reasoning-policy-execution.md",
+        "docs/adr/0003-synthetic-enterprise-not-sap-emulator.md",
+        "docs/adr/0006-governed-state-change.md",
+        "contracts/write-safety-envelope.md"
+      ]
+    },
+    {
+      "id": "ADR-CUST-002",
+      "title": "Treat governed customer replication as an asynchronous business event with explicit causality",
+      "status": "accepted-for-reference-case",
+      "concern": "integration-pattern",
+      "context": "A successful technical message does not prove that the current governed customer change reached the correct business partner or that the target accepted the business state.",
+      "decision": "The reference integration carries a stable change identity, business event identity, canonical object identity, event-time mapping version and correlation evidence. Delivery is idempotent by business event ID, ordering assumptions are explicit, and success requires a fresh target business postcondition.",
+      "consequences": [
+        "old successful messages cannot prove a newer governed change",
+        "duplicate technical delivery cannot apply the same logical mutation twice",
+        "mapping and identity drift are visible recovery conditions rather than hidden replay assumptions"
+      ],
+      "reversal_triggers": [
+        "the production integration is proven synchronous and transactional end-to-end",
+        "the business process changes authority or postcondition semantics"
+      ],
+      "evidence_refs": [
+        "docs/INTEGRATION-CONTRACT.md",
+        "examples/enterprise-context/customer-replication.json",
+        "tests/test_simulator_v03.py"
+      ]
+    },
+    {
+      "id": "ADR-CUST-003",
+      "title": "Recovery follows evidence class; historical replay is never the default",
+      "status": "accepted-for-reference-case",
+      "concern": "failure-and-recovery",
+      "context": "The same stale target value can result from no outbound event, technical failure, business rejection, identity mismatch, mapping drift or target-processing failure. One generic retry action is unsafe.",
+      "decision": "Diagnosis precedes recovery. Regenerate current authoritative state only after proving the current event is absent and the regeneration path is supported. Retry only after technical failure, commit and idempotency state are known. Historical replay requires event-time identity/mapping proof. Manual target overwrite is not a default recovery path.",
+      "consequences": [
+        "recovery actions remain bounded by the evidence class",
+        "unsafe shortcuts are observable as blocked actions",
+        "business postcondition verification remains mandatory after any correction"
+      ],
+      "reversal_triggers": [
+        "a specific production integration publishes a stronger transactional retry/replay guarantee that is independently verified"
+      ],
+      "evidence_refs": [
+        "docs/CUTOVER-RECOVERY.md",
+        "sao_toolkit/incident.py",
+        "examples/reference-cases/customer-governance-o2c/case.json"
+      ]
+    },
+    {
+      "id": "ADR-CUST-004",
+      "title": "Cutover changes authority timing, not the business invariant",
+      "status": "accepted-for-reference-case",
+      "concern": "cutover-authority-transition",
+      "context": "During cutover, freeze points, final deltas, in-flight messages and mapping versions can change while the required target business state stays the same.",
+      "decision": "Record the authority transition, final delta watermark, event IDs, event-time mapping/identity version and reconciliation condition. Declare readiness only after the target business postcondition is reconciled for the final accepted authority state.",
+      "consequences": [
+        "queue-empty is not a cutover success criterion",
+        "in-flight duplicate delivery remains idempotent",
+        "cutover evidence can feed the same AMS recovery model after go-live"
+      ],
+      "reversal_triggers": [
+        "the cutover strategy no longer changes authority or delta boundaries"
+      ],
+      "evidence_refs": [
+        "docs/CUTOVER-RECOVERY.md",
+        "examples/enterprise-context/customer-replication.json"
+      ]
+    }
+  ]
+}
