@@ -113,6 +113,56 @@ class EventLedgerTests(unittest.TestCase):
         self.assertEqual(len(ids), 2)
         self.assertEqual(lab.events[1]["duplicate_of"], lab.events[0]["ledger_id"])
 
+    def test_duplicate_business_event_is_applied_once(self):
+        lab = make_lab()
+        original_version = lab.read_object("bp-200")["version"]
+        lab.inject_fault("duplicate_message", target="EV-DUP-ONCE")
+        ids = lab.emit_message(
+            event_id="EV-DUP-ONCE",
+            canonical_id="bp-200",
+            operation="set_attribute",
+            parameters={"field": "payment_terms", "value": "0002"},
+            correlation_id="corr-dup-once",
+        )
+
+        results = lab.deliver_due_messages()
+
+        self.assertEqual([row["status"] for row in results], ["delivered", "duplicate_ignored"])
+        self.assertEqual(results[1]["reason"], "event_id_already_processed")
+        self.assertEqual(results[1]["processed_by"], ids[0])
+        self.assertEqual(lab.read_object("bp-200")["attributes"]["payment_terms"], "0002")
+        self.assertEqual(lab.read_object("bp-200")["version"], original_version + 1)
+        self.assertEqual(lab.processed_event_ids["EV-DUP-ONCE"]["ledger_id"], ids[0])
+        self.assertIn("duplicate_event_ignored", [row["kind"] for row in lab.export_audit()])
+
+    def test_reused_event_id_with_changed_payload_is_quarantined(self):
+        lab = make_lab()
+        first_ids = lab.emit_message(
+            event_id="EV-COLLISION",
+            canonical_id="bp-200",
+            operation="set_attribute",
+            parameters={"field": "payment_terms", "value": "0002"},
+            correlation_id="corr-first",
+        )
+        first = lab.deliver_due_messages()
+        self.assertEqual(first[0]["status"], "delivered")
+
+        second_ids = lab.emit_message(
+            event_id="EV-COLLISION",
+            canonical_id="bp-200",
+            operation="set_attribute",
+            parameters={"field": "payment_terms", "value": "0003"},
+            correlation_id="corr-second",
+        )
+        second = lab.deliver_due_messages()
+
+        self.assertEqual(second[0]["status"], "quarantined")
+        self.assertEqual(second[0]["reason"], "event_id_payload_collision")
+        self.assertEqual(second[0]["processed_by"], first_ids[0])
+        self.assertEqual(second[0]["ledger_id"], second_ids[0])
+        self.assertEqual(lab.read_object("bp-200")["attributes"]["payment_terms"], "0002")
+        self.assertIn("event_id_collision", [row["kind"] for row in lab.export_audit()])
+
 
 class StateChangeTests(unittest.TestCase):
     def test_race_condition_rejects_second_actor_stale_precondition(self):

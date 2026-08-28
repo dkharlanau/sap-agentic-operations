@@ -66,6 +66,7 @@ class EnterpriseLab:
         self.events: list[dict] = []
         self.audit: list[dict] = []
         self.completed_idempotency: dict[str, dict] = {}
+        self.processed_event_ids: dict[str, dict] = {}
         self.faults: list[dict] = []
         self._event_seq = 0
         self._audit_seq = 0
@@ -179,6 +180,15 @@ class EnterpriseLab:
 
         return ids
 
+    @staticmethod
+    def _event_fingerprint(event: dict) -> str:
+        return stable_hash({
+            "canonical_id": event["canonical_id"],
+            "operation": event["operation"],
+            "parameters": event["parameters"],
+            "identity_version": event["identity_version"],
+        })
+
     def deliver_due_messages(self) -> list[dict]:
         results = []
         for event in sorted(self.events, key=lambda x: (x["deliver_at"], x["ledger_id"])):
@@ -188,6 +198,32 @@ class EnterpriseLab:
             if event["identity_version"] != self.identity_version:
                 event["status"] = "quarantined"
                 event["reason"] = "identity_version_changed"
+                results.append(copy.deepcopy(event))
+                continue
+
+            fingerprint = self._event_fingerprint(event)
+            previous_event = self.processed_event_ids.get(event["event_id"])
+            if previous_event:
+                event["processed_by"] = previous_event["ledger_id"]
+                if previous_event["fingerprint"] == fingerprint:
+                    event["status"] = "duplicate_ignored"
+                    event["reason"] = "event_id_already_processed"
+                    audit_kind = "duplicate_event_ignored"
+                else:
+                    event["status"] = "quarantined"
+                    event["reason"] = "event_id_payload_collision"
+                    audit_kind = "event_id_collision"
+                self._append_audit(
+                    kind=audit_kind,
+                    correlation_id=event["correlation_id"],
+                    object_id=event["canonical_id"],
+                    detail={
+                        "event_id": event["event_id"],
+                        "ledger_id": event["ledger_id"],
+                        "processed_by": previous_event["ledger_id"],
+                        "reason": event["reason"],
+                    },
+                )
                 results.append(copy.deepcopy(event))
                 continue
 
@@ -202,6 +238,10 @@ class EnterpriseLab:
                 obj["attributes"][field] = event["parameters"].get("value")
                 obj["version"] += 1
                 event["status"] = "delivered"
+                self.processed_event_ids[event["event_id"]] = {
+                    "ledger_id": event["ledger_id"],
+                    "fingerprint": fingerprint,
+                }
             else:
                 event["status"] = "rejected"
                 event["reason"] = "operation_not_supported"
