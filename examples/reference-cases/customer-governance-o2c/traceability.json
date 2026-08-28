@@ -25,7 +25,7 @@
       "control": "canonical identity resolution + ambiguity fail-closed",
       "evidence": ["identity mapping version", "source identity", "target identity"],
       "tests": [
-        "tests/test_customer_control_plane.py#test_mdq_and_s4_ids_resolve_to_same_canonical_customer",
+        "tests/test_customer_control_plane.py#test_mdg_and_s4_ids_resolve_to_same_canonical_customer",
         "examples/reference-cases/customer-governance-o2c/case.json#identity-unresolved",
         "evals/cases.jsonl#mdg-003-ambiguous-business-partner-match"
       ],
