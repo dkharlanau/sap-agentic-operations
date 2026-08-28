@@ -21,6 +21,15 @@
         "payment_terms": "0001",
         "business_block": false
       }
+    },
+    "customer-100": {
+      "canonical_type": "business_partner",
+      "canonical_id": "customer-100",
+      "version": 1,
+      "attributes": {
+        "delivery_control": "OLD",
+        "business_block": false
+      }
     }
   },
   "identity": {
@@ -31,6 +40,10 @@
     "bp-200": {
       "synthetic-mdg": "BP-200",
       "synthetic-s4": "BP-9200"
+    },
+    "customer-100": {
+      "synthetic-mdg": "C-100",
+      "synthetic-s4": "BP-501"
     }
   },
   "policies": {
@@ -39,6 +52,10 @@
       "version": 1
     },
     "policy://payment-terms/r3": {
+      "result": "require_approval",
+      "version": 1
+    },
+    "policy://delivery-control/r3": {
       "result": "require_approval",
       "version": 1
     },
