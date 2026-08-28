@@ -54,8 +54,8 @@ class LabResult:
 class EnterpriseLab:
     """Deterministic testbed for enterprise-agent state-change controls."""
 
-    ALLOWED_OPERATIONS = {"release_business_block", "set_payment_terms"}
-    ALLOWED_FIELDS = {"business_block", "payment_terms"}
+    ALLOWED_OPERATIONS = {"release_business_block", "set_payment_terms", "set_delivery_control"}
+    ALLOWED_FIELDS = {"business_block", "payment_terms", "delivery_control"}
 
     def __init__(self, state: dict):
         self.state = copy.deepcopy(state)
@@ -327,6 +327,8 @@ class EnterpriseLab:
             self.state["objects"][canonical_id]["attributes"]["business_block"] = False
         elif operation_name == "set_payment_terms":
             self.state["objects"][canonical_id]["attributes"]["payment_terms"] = operation.get("parameters", {}).get("payment_terms")
+        elif operation_name == "set_delivery_control":
+            self.state["objects"][canonical_id]["attributes"]["delivery_control"] = operation.get("parameters", {}).get("delivery_control")
         self.state["objects"][canonical_id]["version"] += 1
 
         if self._take_fault("postcondition_fail", canonical_id):
