@@ -4,15 +4,22 @@ import argparse
 import hashlib
 import json
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
+
+# Repository scripts are intentionally runnable from a clean source checkout.
+# Put the repository root on sys.path before importing the packaged toolkit;
+# installed `sao` usage remains unaffected.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from sao_toolkit.demo import create_demo_pack
 from sao_toolkit.evidence import load_pack
 from sao_toolkit.incident import analyze_incident
 from sao_toolkit.reporting import write_incident_outputs
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CASE = ROOT / "examples" / "reference-cases" / "customer-governance-o2c" / "case.json"
 DEFAULT_OUTPUT = ROOT / "build" / "reference-cases" / "customer-governance-o2c"
 
