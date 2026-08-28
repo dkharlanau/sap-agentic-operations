@@ -1,5 +1,5 @@
 {
-  "format": "sao-reference-case/0.3",
+  "format": "sao-reference-case/0.2",
   "id": "customer-governance-o2c",
   "title": "Customer Governance to S/4 Order-to-Cash readiness",
   "purpose": "Show one business requirement moving through authority, architecture, integration, failure diagnosis, governed recovery, control-plane safety, benchmark evidence and business-state verification without granting an agent autonomous SAP mutation authority.",
