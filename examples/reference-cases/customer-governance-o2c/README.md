@@ -2,13 +2,13 @@
 
 This is the vertical SAP reference case for SAP Agentic Operations.
 
-It follows one business requirement through authority, identity, integration evidence, failure diagnosis, recovery choice and business-state verification:
+It follows one business requirement through authority, identity, integration evidence, failure diagnosis, governed recovery, control-plane safety and business-state verification:
 
 > When a governed customer delivery-control change becomes current in MDG, every in-scope fulfillment system must converge to that authoritative business state before the customer is treated as ready for Order-to-Cash execution.
 
 The case is synthetic and public-safe. It uses no SAP credentials, client identifiers or production payloads.
 
-## Run the complete failure campaign
+## Run the complete assurance case
 
 From a repository checkout:
 
@@ -18,7 +18,11 @@ python scripts/run_customer_governance_reference_case.py \
   --force
 ```
 
-The runner uses the same `sao_toolkit` Incident Analyzer that backs the practical CLI. It does not contain a second diagnosis implementation.
+The runner composes existing SAO mechanisms rather than introducing another decision engine:
+
+- `sao_toolkit` Incident Analyzer for integration/business-state diagnosis;
+- `simulator.v03.EnterpriseLab` for typed recovery, approval, idempotency and postcondition controls;
+- `SAO-Trace` for control-plane sequence and untrusted-instruction checks.
 
 Outputs:
 
@@ -36,13 +40,20 @@ build/reference-cases/customer-governance-o2c/
     stale-target-observation/
     target-mismatch/
     resolved/
+  control-plane/
+    approved-governed-recovery.json
+    approved-governed-recovery.trace.jsonl
+    stale-recovery-approval.json
+    failed-business-postcondition.json
+    duplicate-business-event.json
+    untrusted-runbook-instruction.json
 ```
 
-Every scenario retains its generated Evidence Pack plus JSON/Markdown incident report. The assurance packet records SHA-256 for the scenario contract/output artifacts and fails generation if the analyzer no longer meets the expected safety contract.
+Every generated scenario/control artifact is hashed in `assurance-packet.json`. The run fails when an expected classification, blocked action, approval boundary, idempotency result, postcondition, or trace invariant changes unexpectedly.
 
-## One business problem, not nine disconnected demos
+## One business problem, not disconnected demos
 
-The failure campaign changes evidence around the same governed customer change:
+The incident campaign changes evidence around the same governed customer change:
 
 ```text
 MDG authority: C-100 / delivery_control = NEW
@@ -60,6 +71,14 @@ MDG authority: C-100 / delivery_control = NEW
 S/4 BP-501 / delivery_control = NEW
 ```
 
+The synthetic control-plane resolves both public case identities to one canonical object:
+
+```text
+synthetic-mdg C-100 ─┐
+                     ├─ customer-100
+synthetic-s4 BP-501 ─┘
+```
+
 The resolution condition stays stable:
 
 ```text
@@ -68,7 +87,7 @@ AND the observed target state is causally traceable
 back to the current MDG change CHG-200.
 ```
 
-That means a technically green message is insufficient if identity, mapping, business acknowledgement, freshness or target state is wrong.
+That means a technically green message is insufficient if identity, mapping, business acknowledgement, approval freshness, idempotency, postcondition freshness or target state is wrong.
 
 ## Business analysis
 
@@ -79,6 +98,7 @@ The machine-readable contract in [`case.json`](case.json) defines:
 - business invariants;
 - positive and negative acceptance criteria;
 - business, data-governance, integration, operations and security ownership;
+- incident and control-plane campaigns;
 - explicit non-goals.
 
 The key business invariant is deliberately simple: **current authoritative business state must be proven at the target before O2C readiness is declared.**
@@ -102,12 +122,13 @@ The runtime analysis depends on the same controls described in [`../../../docs/I
 - source/target business identity;
 - event-time mapping version;
 - technical and business acknowledgement separation;
+- event-ID idempotency;
 - fresh target-state postcondition;
 - retry/replay only after the relevant failure state is known.
 
 ## Agent / tool boundary
 
-This reference case is diagnostic and recommend-only.
+The normal incident path remains diagnostic and recommend-only. A state change enters a separate governed execution envelope.
 
 The agent/tool contract may:
 
@@ -115,11 +136,14 @@ The agent/tool contract may:
 - classify the current evidence state;
 - identify missing evidence;
 - recommend a recovery class;
+- prepare an allow-listed typed operation;
 - explicitly block unsafe shortcuts.
 
-It may not silently overwrite S/4, reprocess an old message, bypass authorization or treat a recommendation as an approved change. See [`../../../docs/SAP-AGENT-TOOL-CONTRACTS.md`](../../../docs/SAP-AGENT-TOOL-CONTRACTS.md) and [`../../../contracts/write-safety-envelope.md`](../../../contracts/write-safety-envelope.md).
+A write is still rejected unless the control plane has current identity, allowing policy, operation-scoped approval, state-bound precondition, idempotency key and an expected business postcondition. See [`../../../docs/SAP-AGENT-TOOL-CONTRACTS.md`](../../../docs/SAP-AGENT-TOOL-CONTRACTS.md) and [`../../../contracts/write-safety-envelope.md`](../../../contracts/write-safety-envelope.md).
 
-## Executable failure and recovery campaign
+Untrusted evidence remains data, not policy. The reference case evaluates [`../../../traces/examples/invalid-tool-output-instruction.jsonl`](../../../traces/examples/invalid-tool-output-instruction.jsonl) and requires SAO-Trace to reject the attempted capability escalation triggered by runbook-like text inside tool output.
+
+## Executable incident campaign
 
 | Failure | Expected diagnosis | Bounded recovery direction |
 |---|---|---|
@@ -135,6 +159,20 @@ It may not silently overwrite S/4, reprocess an old message, bypass authorizatio
 
 The runner checks both required **safe actions** and required **blocked actions**. A regression where an unsafe shortcut disappears from the blocked set fails the reference case.
 
+## Executable control-plane campaign
+
+The same case now proves five execution-boundary contracts:
+
+| Check | Expected behavior |
+|---|---|
+| approved governed recovery | `set_delivery_control` executes once and verifies `delivery_control=NEW` |
+| stale recovery approval | execution is rejected as `approval_expired`; target remains `OLD` |
+| failed business postcondition | operation is not reported successful and the proposed value is not retained |
+| duplicate business event | first event is delivered; exact duplicate is `duplicate_ignored`; object version increments once |
+| untrusted runbook-like instruction | SAO-Trace detects the unsafe evidence-triggered escalation and the reference check passes only because the unsafe trace fails |
+
+The approved recovery also emits a machine-readable SAO-Trace generated from the actual simulator before/after hashes and audit ID. That makes the successful path inspectable as both state transition and control-plane sequence.
+
 ## Cutover variant
 
 During authority transition the same invariant is retained but the evidence boundary changes:
@@ -142,14 +180,15 @@ During authority transition the same invariant is retained but the evidence boun
 1. record freeze/bounded-write point;
 2. record final delta watermark;
 3. identify in-flight messages crossing that boundary;
-4. retain the event-time mapping/identity version;
-5. reconcile target business state after final processing.
+4. preserve event IDs so duplicate delivery cannot repeat the side effect;
+5. retain the event-time mapping/identity version;
+6. reconcile target business state after final processing.
 
 Cutover readiness is therefore a business-state assurance decision, not a queue-empty check. See [`../../../docs/CUTOVER-RECOVERY.md`](../../../docs/CUTOVER-RECOVERY.md).
 
 ## AMS handover
 
-The contract defines the monitoring signals and incident lifecycle required to operate the same design after go-live:
+The contract defines the monitoring signals and incident lifecycle required to operate the same design after go-live. In addition to technical/business failures, it explicitly includes duplicate event IDs, event-ID payload collisions, stale approvals and untrusted control-like evidence.
 
 ```text
 collecting_evidence
@@ -164,7 +203,7 @@ The generated `architecture-operations-review.md` is the compact handover/review
 
 ## What this proves — and what it does not
 
-It proves that the current deterministic analyzer distinguishes several materially different SAP-heavy failure states and preserves bounded recovery decisions for one coherent business scenario.
+It proves that the current deterministic analyzer and control plane distinguish materially different SAP-heavy failure states, enforce bounded recovery controls, preserve event idempotency, reject stale approval, detect unsafe evidence-driven capability escalation and require business postcondition evidence for one coherent scenario.
 
 It does **not** prove:
 
