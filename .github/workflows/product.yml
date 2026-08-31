@@ -110,6 +110,15 @@ jobs:
             --output /tmp/sao-normalize/messages-second-pass.csv
           cmp /tmp/sao-normalize/messages.csv /tmp/sao-normalize/messages-second-pass.csv
 
+      - name: Validate external research context and render a bounded review card
+        run: |
+          sao research validate examples/research-evidence/sti-enterprise-agents.json --json
+          sao research review \
+            examples/research-evidence/sti-enterprise-agents.json \
+            --output /tmp/sao-research-review.md
+          grep -q "Execution allowed by this packet.*no" /tmp/sao-research-review.md
+          grep -q "project_interpretation" /tmp/sao-research-review.md
+
       - name: Run all practical toolkit unit tests
         run: python -m unittest discover -s tests -p 'test_*toolkit.py' -v
 
@@ -128,3 +137,4 @@ jobs:
             /tmp/sao-reconcile/sao-output/reconciliation-report.csv
             /tmp/sao-reconcile/sao-output/reconciliation-report.md
             /tmp/sao-normalize/messages.csv
+            /tmp/sao-research-review.md

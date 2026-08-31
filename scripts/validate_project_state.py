@@ -114,12 +114,15 @@ def main() -> int:
         ROOT / "docs" / "EVIDENCE-PACK.md",
         ROOT / "docs" / "QUICKCHECK.md",
         ROOT / "docs" / "RECONCILIATION.md",
+        ROOT / "docs" / "RESEARCH-EVIDENCE-HANDOFF.md",
         ROOT / "docs" / "CONTROL-PLANE.md",
         ROOT / "docs" / "ASSURANCE-CASE.md",
         ROOT / "traces" / "README.md",
         ROOT / "adapters" / "README.md",
         ROOT / "experiments" / "README.md",
         ROOT / "sao_toolkit" / "cli.py",
+        ROOT / "sao_toolkit" / "research_context.py",
+        ROOT / "examples" / "research-evidence" / "sti-enterprise-agents.json",
         ROOT / ".github" / "workflows" / "product.yml",
     ]
     for path in required_surfaces:

@@ -13,6 +13,7 @@ from .normalize import NormalizeError, create_we02_like_demo, normalize_csv
 from .quickcheck import analyze_quickcheck, create_quickcheck_demo, write_quickcheck_outputs
 from .reconciliation import analyze_reconciliation, create_reconciliation_demo, write_reconciliation_outputs
 from .reporting import write_incident_outputs
+from .research_context import ResearchContextError, load_packet, packet_summary, write_review
 from .workbench import serve_workbench, write_workbench
 
 
@@ -147,6 +148,36 @@ def cmd_workbench(args: argparse.Namespace) -> int:
         print(f"workbench error: {exc}", file=sys.stderr); return 2
 
 
+def cmd_research_validate(args: argparse.Namespace) -> int:
+    try:
+        packet = load_packet(args.packet)
+    except ResearchContextError as exc:
+        print(f"research evidence error: {exc}", file=sys.stderr); return 2
+    summary = packet_summary(packet)
+    if args.json:
+        print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
+    elif summary["valid"]:
+        print(f"Research evidence packet OK: {summary['packet_id']}")
+        print(f"claims: {summary['claims']}")
+        print("trust: external_research_context; human review required; execution allowed: no")
+    else:
+        print("Research evidence packet invalid", file=sys.stderr)
+        for error in summary["errors"]:
+            print(f"- {error}", file=sys.stderr)
+    return 0 if summary["valid"] else 2
+
+
+def cmd_research_review(args: argparse.Namespace) -> int:
+    try:
+        packet = load_packet(args.packet)
+        target = write_review(packet, args.output, force=args.force)
+    except ResearchContextError as exc:
+        print(f"research evidence error: {exc}", file=sys.stderr); return 2
+    print(f"External research review card: {target}")
+    print("boundary: human review required; authorization and execution prohibited")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sao", description="Evidence-first toolkit for SAP-heavy enterprise operations")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -172,6 +203,10 @@ def build_parser() -> argparse.ArgumentParser:
     p = normalize_sub.add_parser("csv"); p.add_argument("--table", required=True, choices=["source_changes", "messages", "target_state", "identity_map"]); p.add_argument("--input", required=True); p.add_argument("--mapping", required=True); p.add_argument("--output", required=True); p.add_argument("--delimiter", default=","); p.add_argument("--json", action="store_true"); p.set_defaults(func=cmd_normalize_csv)
 
     p = sub.add_parser("workbench", help="view an Evidence Pack as a local read-only incident workbench"); p.add_argument("pack"); p.add_argument("--host", default="127.0.0.1"); p.add_argument("--port", type=int, default=8765); p.add_argument("--no-open", action="store_true"); p.add_argument("--output"); p.set_defaults(func=cmd_workbench)
+
+    research = sub.add_parser("research", help="validate external research context or render a bounded human review card"); research_sub = research.add_subparsers(dest="research_command", required=True)
+    p = research_sub.add_parser("validate"); p.add_argument("packet"); p.add_argument("--json", action="store_true"); p.set_defaults(func=cmd_research_validate)
+    p = research_sub.add_parser("review"); p.add_argument("packet"); p.add_argument("--output", required=True); p.add_argument("--force", action="store_true"); p.set_defaults(func=cmd_research_review)
     return parser
 
 

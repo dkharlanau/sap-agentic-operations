@@ -105,6 +105,18 @@ Explicit mappings can translate source column names, constants and technical val
 
 [Normalizing exports](./NORMALIZING-EXPORTS.md)
 
+## Review external research without turning it into operational truth
+
+```bash
+sao research validate examples/research-evidence/sti-enterprise-agents.json
+sao research review examples/research-evidence/sti-enterprise-agents.json \
+  --output /tmp/enterprise-agent-review.md
+```
+
+The portable handoff preserves claim provenance and an explicit non-operational boundary. It cannot authorize execution or stand in for incident evidence.
+
+[External research evidence handoff](./RESEARCH-EVIDENCE-HANDOFF.md)
+
 The design rule is simple:
 
 > **Connectors may change; evidence semantics should remain stable.**

@@ -5,6 +5,15 @@ SAO has two versioned surfaces:
 - the **practical toolkit**, focused on evidence, incident analysis, reconciliation and local workflows;
 - **SAO-Bench**, the experimental agent-assurance corpus and evaluator.
 
+## Unreleased — Practical Toolkit
+
+### Added
+
+- Portable Signal to Insight research-evidence handoff validation.
+- `sao research validate` for schema, publication-boundary and digest checks.
+- `sao research review` for a bounded, Markdown-escaped human review card.
+- An explicit separation between external research context and operational Evidence Packs.
+
 ## 0.4.0-alpha.1 — Practical Toolkit Alpha 1
 
 First usable product-oriented alpha.

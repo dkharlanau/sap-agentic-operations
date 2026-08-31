@@ -327,6 +327,25 @@ Cloud ALM / AIF / CPI collectors are roadmap items; Alpha 1 does **not** claim a
 
 ---
 
+# Bring research into control design without treating it as operational truth
+
+Signal to Insight can export a published insight as a digest-protected research-evidence packet. SAO validates the packet locally and renders a bounded human review card:
+
+```bash
+sao research validate \
+  examples/research-evidence/sti-enterprise-agents.json
+
+sao research review \
+  examples/research-evidence/sti-enterprise-agents.json \
+  --output /tmp/enterprise-agent-review.md
+```
+
+The packet remains `external_research_context`. It requires human review, cannot authorize execution and cannot represent observations from a production incident.
+
+See [External research evidence handoff](docs/RESEARCH-EVIDENCE-HANDOFF.md) for the contract, threat boundary and Signal to Insight exporter.
+
+---
+
 # Example output
 
 A diagnosis is structured, not free-form AI prose:
@@ -537,16 +556,20 @@ SAO is independent work. It is not an official SAP project, SAP certification, p
 
 ---
 
-# Author
+## Related projects
 
-**Dzmitryi Kharlanau**  
-SAP Transformation · Enterprise Operations · Agentic AI
-
-- Professional site: https://dkharlanau.github.io/
-- LinkedIn: https://www.linkedin.com/in/dkharlanau/
-- Agent-Ready Web Profile: https://github.com/dkharlanau/agent-ready-web-profile
-- Public datasets: https://github.com/dkharlanau/dkharlanau-datasets
+- [Signal to Insight](https://github.com/dkharlanau/signal-to-insight) produces the v1 public research-evidence packet supported by `sao research`; the handoff is intentionally non-operational.
+- [Reconciliation as Code](https://github.com/dkharlanau/reconciliation-as-code) is the broader declarative reconciliation engine; SAO keeps a smaller SAP-operations-oriented reconciliation path for local evidence packs.
+- [Interface as Code](https://github.com/dkharlanau/interface-as-code) defines versionable interface contracts; SAO focuses on runtime observations, diagnosis and verified business outcomes.
+- [dkharlanau-datasets](https://github.com/dkharlanau/dkharlanau-datasets) publishes citable public learning records, not client data or production incident evidence.
 
 ## License
 
 Apache License 2.0. See [`LICENSE`](LICENSE).
+
+## About the author
+
+Created and maintained by **Dzmitryi Kharlanau**, an SAP consultant and system analyst working across enterprise architecture, data, integration, operations, and practical AI.
+
+- [Website and knowledge base](https://dkharlanau.github.io/)
+- [LinkedIn](https://www.linkedin.com/in/dkharlanau/)
