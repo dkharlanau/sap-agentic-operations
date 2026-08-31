@@ -3,6 +3,8 @@
 [![SAO practical toolkit](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/product.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/product.yml)
 [![SAO full suite](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/suite.yml/badge.svg)](https://github.com/dkharlanau/sap-agentic-operations/actions/workflows/suite.yml)
 
+[Documentation](https://dkharlanau.github.io/sap-agentic-operations/docs/) · [Product page](https://dkharlanau.github.io/sap-agentic-operations/)
+
 **A local-first, evidence-first toolkit for diagnosing, reconciling, validating, and safely recovering SAP-heavy enterprise operations.**
 
 Maintained by **Dzmitryi Kharlanau** — SAP Transformation · Enterprise Operations · Agentic AI.

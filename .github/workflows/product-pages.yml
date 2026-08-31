@@ -3,7 +3,11 @@ name: Publish Product Page
 on:
   push:
     branches: [main]
-    paths: ["docs/product.html", "docs/agent-manifest.json", ".github/workflows/product-pages.yml"]
+    paths:
+      - "*.md"
+      - "docs/**"
+      - "scripts/stage_pages.py"
+      - ".github/workflows/product-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -23,13 +27,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
-      - name: Stage product site
-        run: |
-          mkdir -p _site
-          cp docs/product.html _site/index.html
-          cp docs/agent-manifest.json _site/agent-manifest.json
-          touch _site/.nojekyll
       - uses: actions/configure-pages@v5
+      - name: Stage product and documentation source
+        run: python3 scripts/stage_pages.py --output _pages-source
+      - name: Build readable documentation
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./_pages-source
+          destination: ./_site
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site

@@ -24,7 +24,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/dkharlanau/sap-agentic-operations"
-Documentation = "https://github.com/dkharlanau/sap-agentic-operations/tree/main/docs"
+Documentation = "https://dkharlanau.github.io/sap-agentic-operations/docs/"
 Issues = "https://github.com/dkharlanau/sap-agentic-operations/issues"
 
 [project.scripts]
