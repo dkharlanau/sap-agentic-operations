@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "dimensions": {"width": 1280, "height": 640},
+  "track": "SAP and practical AI",
+  "title": "SAP Agentic Operations",
+  "subtitle": "Design bounded AI operations around evidence, policy, capability and verification.",
+  "repository": "sap-agentic-operations",
+  "author": "Dzmitryi Kharlanau",
+  "motif": "control",
+  "background": "#eef4ff",
+  "ink": "#11183e",
+  "muted": "#505a82",
+  "accent": "#1019c8",
+  "panel": "#ffffff",
+  "generated_by": "dkharlanau.github.io/scripts/render_repository_social_preview.py",
+  "claim_boundary": "Reference architecture purpose only; recommendation is not authorization or execution."
+}
