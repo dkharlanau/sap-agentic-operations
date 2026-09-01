@@ -12,7 +12,7 @@
   "purpose": "Local-first evidence and operational decision toolkit for SAP-heavy enterprise operations, backed by a vendor-neutral architecture and agent-assurance lab.",
   "practicalToolkit": {
     "name": "SAO Practical Toolkit",
-    "version": "0.4.0-alpha.2",
+    "version": "0.4.0-alpha.3",
     "install": "python -m pip install .",
     "entrypoint": "sao",
     "python": ">=3.11",

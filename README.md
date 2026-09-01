@@ -9,7 +9,23 @@
 
 Maintained by **Dzmitryi Kharlanau** — SAP Transformation · Enterprise Operations · Agentic AI.
 
-Status: **Practical Toolkit `0.4.0-alpha.2` · SAO-Bench `0.3-dev`**.
+Status: **Practical Toolkit `0.4.0-alpha.3` · SAO-Bench `0.3-dev`**.
+
+---
+
+## 30-second proof
+
+With Python 3.11+, install the local package and analyze the checked-in synthetic missing-event fixture:
+
+```bash
+python -m pip install .
+sao incident analyze examples/evidence-packs/customer-replication-missing-event \
+  --output /tmp/sao-30-second-proof
+```
+
+Expected result: `status: insufficient_evidence` and `classification: current_outbound_event_not_proven`. The named artifact is `/tmp/sao-30-second-proof/incident-report.json`; it must keep `execution_allowed` set to `false`.
+
+Read the public [Evidence Pack contract](https://dkharlanau.github.io/sap-agentic-operations/docs/EVIDENCE-PACK.html). This checked-in synthetic fixture makes no network call, uses no live SAP system or credentials, and neither the CLI result nor the report grants execution authority.
 
 ---
 
@@ -101,7 +117,7 @@ sao-demo/sao-output/incident-report.json
 
 ---
 
-# Practical workflows available in Alpha 2
+# Practical workflows available
 
 ## 1. Incident Analyzer — full Evidence Pack
 
@@ -500,7 +516,7 @@ Its intended niche is the layer between **observation and a safe operational dec
 
 ---
 
-# Alpha 2 stopping rule
+# Practical-alpha stopping rule
 
 The practical alpha is now broad enough to test with people.
 
@@ -553,7 +569,7 @@ SAO is independent work. It is not an official SAP project, SAP certification, p
 - [`traces/`](traces/) — SAO-Trace
 - [`ROADMAP.md`](ROADMAP.md) — product roadmap
 - [`CHANGELOG.md`](CHANGELOG.md) — product + benchmark changes
-- [`release/GOLDEN-QUICKSTART-0.4.0-alpha.2.md`](release/GOLDEN-QUICKSTART-0.4.0-alpha.2.md) — pinned release verification
+- [`release/GOLDEN-QUICKSTART-0.4.0-alpha.3.md`](release/GOLDEN-QUICKSTART-0.4.0-alpha.3.md) — pinned release verification
 - [`release/USABILITY-TEST-15-MIN.md`](release/USABILITY-TEST-15-MIN.md) — blank external first-use protocol
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and privacy-safe feedback paths
 

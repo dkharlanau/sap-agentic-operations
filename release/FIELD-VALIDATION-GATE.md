@@ -1,6 +1,6 @@
 # External field-validation gate
 
-Practical Toolkit 0.4.0-alpha.2 is feature-complete enough for the practitioner loop.
+Practical Toolkit 0.4.0-alpha.3 is feature-complete enough for the practitioner loop.
 
 Before starting another large horizontal framework layer, collect:
 

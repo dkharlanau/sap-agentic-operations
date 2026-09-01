@@ -5,6 +5,20 @@ SAO has two versioned surfaces:
 - the **practical toolkit**, focused on evidence, incident analysis, reconciliation and local workflows;
 - **SAO-Bench**, the experimental agent-assurance corpus and evaluator.
 
+## 0.4.0-alpha.3 — Practical Toolkit Alpha 3
+
+### Changed
+
+- Added a compact, reproducible proof path using the checked-in synthetic missing-event Evidence Pack.
+- Named the expected JSON artifact and deterministic control result directly in the README.
+- Linked the proof to the public Evidence Pack contract and made the no-live-SAP, no-execution-authority boundary explicit.
+
+### Compatibility and limits
+
+- Practical CLI behavior and Evidence Pack formats are unchanged from Alpha 2.
+- The proof is synthetic local evidence, not a production SAP result or authorization signal.
+- SAO-Bench remains separately versioned as `0.3-dev`; no benchmark freeze is implied.
+
 ## 0.4.0-alpha.2 — Practical Toolkit Alpha 2
 
 ### Added

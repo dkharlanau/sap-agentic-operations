@@ -1,6 +1,6 @@
 # Field-test SAO without exposing client data
 
-Practical Toolkit `0.4.0-alpha.2` is at the point where **field feedback is more valuable than another framework feature**.
+Practical Toolkit `0.4.0-alpha.3` is at the point where **field feedback is more valuable than another framework feature**.
 
 The purpose of a field test is simple:
 

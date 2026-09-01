@@ -12,7 +12,7 @@ Use only `sao demo`. Do not use or publish client names, business-object identif
 
 | Time | Participant task | Observe without coaching |
 | --- | --- | --- |
-| 0–3 min | Install from the release tag using the [golden quickstart](GOLDEN-QUICKSTART-0.4.0-alpha.2.md). | Setup friction and terminology. |
+| 0–3 min | Install from the release tag using the [golden quickstart](GOLDEN-QUICKSTART-0.4.0-alpha.3.md). | Setup friction and terminology. |
 | 3–6 min | Run `sao demo` and locate the Markdown report. | Time to first useful output. |
 | 6–10 min | Explain the selected change, available evidence, classification, and missing evidence. | Whether causality/freshness are understandable. |
 | 10–13 min | Identify one safe next action and two blocked shortcuts. | Whether recommendation is confused with authorization. |

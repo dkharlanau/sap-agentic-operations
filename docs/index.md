@@ -24,7 +24,7 @@ python -m pip install .
 sao demo
 ```
 
-Current practical version: **0.4.0-alpha.2**.
+Current practical version: **0.4.0-alpha.3**.
 
 The default demo deliberately models a dangerous support shortcut: a successful old message exists, but it does not prove that a newer authoritative business change replicated.
 
