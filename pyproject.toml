@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sap-agentic-operations"
-version = "0.4.0a1"
+version = "0.4.0a2"
 description = "Local-first evidence and incident analysis toolkit for SAP-heavy enterprise operations"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [{name = "Dzmitryi Kharlanau"}]
 keywords = [
   "sap",
@@ -25,7 +25,9 @@ dependencies = []
 [project.urls]
 Homepage = "https://github.com/dkharlanau/sap-agentic-operations"
 Documentation = "https://dkharlanau.github.io/sap-agentic-operations/docs/"
+Repository = "https://github.com/dkharlanau/sap-agentic-operations"
 Issues = "https://github.com/dkharlanau/sap-agentic-operations/issues"
+Changelog = "https://github.com/dkharlanau/sap-agentic-operations/blob/main/CHANGELOG.md"
 
 [project.scripts]
 sao = "sao_toolkit.cli:main"

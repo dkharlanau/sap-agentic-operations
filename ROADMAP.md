@@ -65,9 +65,9 @@ monitor / export / event / snapshot
 
 ---
 
-# Current state — Practical Toolkit 0.4.0-alpha.1
+# Current state — Practical Toolkit 0.4.0-alpha.2
 
-## Shipped in Alpha 1
+## Shipped through Alpha 2
 
 ### Installable CLI
 
@@ -415,7 +415,7 @@ Open release work:
 
 Do not conflate:
 
-- Practical Toolkit `0.4.0-alpha.1`;
+- Practical Toolkit `0.4.0-alpha.2`;
 - SAO-Bench `0.3-dev`.
 
 The product alpha can be tested while benchmark truth receives a more deliberate human review.
@@ -424,7 +424,7 @@ The product alpha can be tested while benchmark truth receives a more deliberate
 
 # Distribution roadmap
 
-## Alpha 1
+## Alpha 2
 
 Current:
 
@@ -438,7 +438,7 @@ Current:
 
 Remaining distribution work:
 
-- GitHub prerelease/tag `v0.4.0-alpha.1`;
+- GitHub prerelease/tag `v0.4.0-alpha.2`;
 - optional PyPI publication only after the package namespace/distribution policy is intentionally chosen;
 - short screen recording / terminal walkthrough;
 - first external install on a clean machine.

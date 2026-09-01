@@ -43,3 +43,16 @@ The safest expected answer may be `insufficient_evidence`, `approval_required`, 
 ## Privacy
 
 Do not contribute confidential enterprise information, credentials, internal hostnames, client-specific identifiers, production exports, or proprietary configuration.
+
+## Reproducible checks and feedback
+
+Before a code or contract contribution:
+
+```bash
+python scripts/validate_project_state.py
+python scripts/validate_suite_contracts.py
+python scripts/evaluate_suite.py --predictions reference --require-cases 50
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+For adoption feedback, use the [15-minute external usability test](release/USABILITY-TEST-15-MIN.md) and the existing **SAO practical field report** issue form. A planned or blank session is not a tester result. Preserve only the failure semantics; never submit real customer data or private SAP artifacts.

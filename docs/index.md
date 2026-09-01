@@ -24,7 +24,7 @@ python -m pip install .
 sao demo
 ```
 
-Current practical version: **0.4.0-alpha.1**.
+Current practical version: **0.4.0-alpha.2**.
 
 The default demo deliberately models a dangerous support shortcut: a successful old message exists, but it does not prove that a newer authoritative business change replicated.
 
@@ -283,7 +283,7 @@ Probabilistic model instructions are used where deterministic policy belongs.
 
 ## What happens next
 
-Alpha 1 is intentionally a stopping point for feature accumulation.
+Alpha 2 is intentionally a stopping point for feature accumulation.
 
 The next high-value evidence is **field use**:
 

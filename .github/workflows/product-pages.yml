@@ -6,6 +6,7 @@ on:
     paths:
       - "*.md"
       - "docs/**"
+      - "assets/social-preview.png"
       - "scripts/stage_pages.py"
       - ".github/workflows/product-pages.yml"
   workflow_dispatch:

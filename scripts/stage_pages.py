@@ -71,6 +71,10 @@ def stage(output: Path) -> None:
         REPOSITORY_ROOT / "docs" / "assets" / "toolkit-pages.css",
         assets / "toolkit-pages.css",
     )
+    shutil.copyfile(
+        REPOSITORY_ROOT / "assets" / "social-preview.png",
+        assets / "social-preview.png",
+    )
 
     for name in ROOT_DOCUMENTS:
         source = REPOSITORY_ROOT / name

@@ -9,7 +9,7 @@
 
 Maintained by **Dzmitryi Kharlanau** — SAP Transformation · Enterprise Operations · Agentic AI.
 
-Status: **Practical Toolkit `0.4.0-alpha.1` · SAO-Bench `0.3-dev`**.
+Status: **Practical Toolkit `0.4.0-alpha.2` · SAO-Bench `0.3-dev`**.
 
 ---
 
@@ -101,7 +101,7 @@ sao-demo/sao-output/incident-report.json
 
 ---
 
-# Practical workflows available in Alpha 1
+# Practical workflows available in Alpha 2
 
 ## 1. Incident Analyzer — full Evidence Pack
 
@@ -323,7 +323,7 @@ This is intentional.
 
 A connector may change. The meaning of identity, authority, causality, mapping version, acknowledgement and business postcondition should not.
 
-Cloud ALM / AIF / CPI collectors are roadmap items; Alpha 1 does **not** claim a live SAP connector yet.
+Cloud ALM / AIF / CPI collectors are roadmap items; Alpha 2 does **not** claim a live SAP connector yet.
 
 ---
 
@@ -500,7 +500,7 @@ Its intended niche is the layer between **observation and a safe operational dec
 
 ---
 
-# Alpha 1 stopping rule
+# Alpha 2 stopping rule
 
 The practical alpha is now broad enough to test with people.
 
@@ -553,6 +553,9 @@ SAO is independent work. It is not an official SAP project, SAP certification, p
 - [`traces/`](traces/) — SAO-Trace
 - [`ROADMAP.md`](ROADMAP.md) — product roadmap
 - [`CHANGELOG.md`](CHANGELOG.md) — product + benchmark changes
+- [`release/GOLDEN-QUICKSTART-0.4.0-alpha.2.md`](release/GOLDEN-QUICKSTART-0.4.0-alpha.2.md) — pinned release verification
+- [`release/USABILITY-TEST-15-MIN.md`](release/USABILITY-TEST-15-MIN.md) — blank external first-use protocol
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and privacy-safe feedback paths
 
 ---
 

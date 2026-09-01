@@ -5,7 +5,7 @@ SAO has two versioned surfaces:
 - the **practical toolkit**, focused on evidence, incident analysis, reconciliation and local workflows;
 - **SAO-Bench**, the experimental agent-assurance corpus and evaluator.
 
-## Unreleased — Practical Toolkit
+## 0.4.0-alpha.2 — Practical Toolkit Alpha 2
 
 ### Added
 
@@ -13,6 +13,17 @@ SAO has two versioned surfaces:
 - `sao research validate` for schema, publication-boundary and digest checks.
 - `sao research review` for a bounded, Markdown-escaped human review card.
 - An explicit separation between external research context and operational Evidence Packs.
+- A complete synthetic Customer Governance to Order-to-Cash reference assurance set.
+- Stable cross-repository artifact references with executable validation helpers.
+- Business-event idempotency and postcondition checks in the reference runtime path.
+- Public product and documentation Pages.
+
+### Compatibility and limits
+
+- Evidence Pack and practical CLI contracts remain compatible with Alpha 1.
+- Research evidence is review context only; it cannot grant authority or become incident evidence.
+- The customer-governance reference set is synthetic assurance evidence, not production validation.
+- No live SAP connector, production write automation, or package-registry publication is claimed.
 
 ## 0.4.0-alpha.1 — Practical Toolkit Alpha 1
 
