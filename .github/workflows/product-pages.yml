@@ -36,6 +36,8 @@ jobs:
         with:
           source: ./_pages-source
           destination: ./_site
+      - name: Add consent-aware portfolio analytics
+        run: node scripts/inject-portfolio-analytics.mjs _site
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
