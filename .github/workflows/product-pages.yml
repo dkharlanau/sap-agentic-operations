@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - ".arwp/**"
+      - "scripts/stage-arwp.mjs"
       - "*.md"
       - "docs/**"
       - "assets/social-preview.png"
@@ -40,6 +42,8 @@ jobs:
         run: |
           sudo chown -R "$(id -u):$(id -g)" _site
           node scripts/inject-portfolio-analytics.mjs _site
+      - name: Stage verified ARWP profile and discovery
+        run: node scripts/stage-arwp.mjs _site
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site

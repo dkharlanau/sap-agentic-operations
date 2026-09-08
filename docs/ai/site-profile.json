@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dkharlanau/agent-ready-web-profile/v0.1.0/schema/site-profile.schema.json",
+  "profileVersion": "0.1",
+  "id": "sap-agentic-operations",
+  "name": "SAP Agentic Operations (SAO)",
+  "canonicalUrl": "https://dkharlanau.github.io/sap-agentic-operations/",
+  "description": "Diagnose, reconcile, validate, and guide safe recovery for SAP-heavy operational incidents from explicit evidence.",
+  "languages": [
+    "en"
+  ],
+  "trust": {
+    "provenance": "https://github.com/dkharlanau/sap-agentic-operations/blob/main/README.md",
+    "license": "https://github.com/dkharlanau/sap-agentic-operations/blob/main/LICENSE"
+  },
+  "data": {
+    "distributions": [
+      {
+        "name": "Project agent manifest",
+        "url": "https://dkharlanau.github.io/sap-agentic-operations/agent-manifest.json",
+        "mediaType": "application/json",
+        "role": "other",
+        "description": "Source-backed project scope and local CLI entrypoints; this is not a hosted execution endpoint."
+      }
+    ]
+  }
+}
