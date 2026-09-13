@@ -8,6 +8,8 @@ import re
 import shutil
 from pathlib import Path
 
+from build_incident_patterns import build_incident_pattern_pages
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 ROOT_DOCUMENTS = (
@@ -84,6 +86,10 @@ def stage(output: Path) -> None:
     docs_root = REPOSITORY_ROOT / "docs"
     for source in sorted(docs_root.rglob("*.md")):
         stage_markdown(source, output / "docs" / source.relative_to(docs_root))
+
+    # Incident-pattern pages are projections of the current deterministic analyzer,
+    # not separately maintained troubleshooting articles. Build them only at staging.
+    build_incident_pattern_pages(output / "docs" / "incident-patterns")
 
     (output / "_config.yml").write_text(
         "\n".join(

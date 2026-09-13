@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "reviewed_at": "2026-09-13",
+  "scope": "synthetic_sao_incident_scenarios_only",
+  "patterns": [
+    {
+      "id": "current-outbound-event-not-proven",
+      "slug": "mdg-change-no-current-outbound-event",
+      "scenario": "missing-current-event",
+      "title": "SAP MDG change exists, but no current outbound event is proven",
+      "symptom": "MDG contains the newer customer value, S/4 still shows the older value, and an older successful message exists.",
+      "search_phrases": ["SAP MDG customer not replicated to S/4", "SAP IDoc green but latest change missing"],
+      "signal_establishes": "An older technical success can be present while the current authoritative change still has no causally linked outbound event in the supplied evidence.",
+      "not_established": "The older successful message does not prove that the latest business change was replicated.",
+      "related": ["target-business-state-mismatch", "stale-target-observation"]
+    },
+    {
+      "id": "business-processing-rejection",
+      "slug": "transport-success-business-rejection",
+      "scenario": "business-rejection",
+      "title": "SAP transport succeeded, but business processing rejected the change",
+      "symptom": "The integration layer shows technical success, yet the target processing layer rejected the business change.",
+      "search_phrases": ["SAP IDoc successful but business error", "SAP AIF message successful target rejected"],
+      "signal_establishes": "Transport reached the target processing layer and the supplied business acknowledgement rejected the current change.",
+      "not_established": "Technical delivery success does not prove business acceptance or a correct target state.",
+      "related": ["target-business-state-mismatch", "technical-message-failure"]
+    },
+    {
+      "id": "mapping-version-drift",
+      "slug": "mapping-changed-old-message-replay",
+      "scenario": "mapping-drift",
+      "title": "SAP mapping changed: replaying an old message can be unsafe",
+      "symptom": "A current identity or mapping version differs from the version under which the historical event was created.",
+      "search_phrases": ["SAP CPI mapping changed reprocess old message", "SAP IDoc mapping version replay"],
+      "signal_establishes": "The current mapping and the event-time mapping differ in the supplied evidence.",
+      "not_established": "The current mapping cannot safely be assumed to describe the historical event or its original target identity.",
+      "related": ["target-identity-mismatch", "technical-message-failure"]
+    },
+    {
+      "id": "target-business-state-mismatch",
+      "slug": "message-success-target-value-wrong",
+      "scenario": "target-mismatch",
+      "title": "SAP message was accepted, but the target business value is still wrong",
+      "symptom": "The current message is causally linked and accepted, but the latest target observation still differs from the authoritative source value.",
+      "search_phrases": ["SAP IDoc successful but data not updated", "SAP AIF successful target wrong"],
+      "signal_establishes": "The supplied evidence reaches the target processing layer but the expected business postcondition is not satisfied.",
+      "not_established": "A successful message status alone does not establish that the business object is correct in the target.",
+      "related": ["business-processing-rejection", "stale-target-observation"]
+    },
+    {
+      "id": "technical-message-failure",
+      "slug": "failed-message-safe-retry",
+      "scenario": "technical-failure",
+      "title": "When is it safe to retry a failed SAP integration message?",
+      "symptom": "The message linked to the current business change has a technical failure status.",
+      "search_phrases": ["SAP IDoc reprocess safe", "SAP CPI retry idempotency"],
+      "signal_establishes": "The current causally linked message failed technically in the supplied evidence.",
+      "not_established": "A technical failure does not reveal whether a partial commit occurred or whether replay is idempotent.",
+      "related": ["mapping-version-drift", "business-processing-rejection"]
+    },
+    {
+      "id": "identity-unresolved",
+      "slug": "customer-business-partner-identity-unresolved",
+      "scenario": "identity-unresolved",
+      "title": "SAP Customer to Business Partner identity is unresolved — do not correct the target yet",
+      "symptom": "The source customer cannot be mapped to one resolved target Business Partner with the supplied identity evidence.",
+      "search_phrases": ["SAP BP replication wrong business partner", "SAP customer BP mapping unresolved"],
+      "signal_establishes": "Cross-system identity is unresolved or ambiguous in the supplied evidence.",
+      "not_established": "Similarity, naming, or a convenient target record does not prove canonical business identity.",
+      "related": ["target-identity-mismatch", "current-outbound-event-not-proven"]
+    },
+    {
+      "id": "stale-target-observation",
+      "slug": "stale-target-snapshot-replication",
+      "scenario": "stale-target-observation",
+      "title": "A stale S/4 snapshot cannot prove the latest SAP replication succeeded",
+      "symptom": "The target-state observation predates the current outbound event.",
+      "search_phrases": ["SAP replication target snapshot stale", "SAP target state older than IDoc"],
+      "signal_establishes": "The available target observation is older than the current message and therefore cannot verify its business outcome.",
+      "not_established": "An old target snapshot cannot prove either success or failure of the newer event.",
+      "related": ["target-business-state-mismatch", "current-outbound-event-not-proven"]
+    },
+    {
+      "id": "target-identity-mismatch",
+      "slug": "replication-event-wrong-business-partner",
+      "scenario": "target-identity-mismatch",
+      "title": "SAP replication event points to the wrong target Business Partner",
+      "symptom": "The current message targets a different target identity from the resolved source-to-target mapping.",
+      "search_phrases": ["SAP business partner replication wrong target", "SAP BP identity mismatch"],
+      "signal_establishes": "The message target conflicts with the currently resolved business identity in the supplied evidence.",
+      "not_established": "The message must not be replayed merely because it is current; event-time identity must be resolved first.",
+      "related": ["identity-unresolved", "mapping-version-drift"]
+    }
+  ]
+}
