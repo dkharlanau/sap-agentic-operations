@@ -6,6 +6,7 @@ on:
     paths:
       - ".arwp/**"
       - "scripts/stage-arwp.mjs"
+      - "scripts/inject-goose-proof-mark.mjs"
       - "*.md"
       - "docs/**"
       - "assets/social-preview.png"
@@ -44,6 +45,8 @@ jobs:
           node scripts/inject-portfolio-analytics.mjs _site
       - name: Stage verified ARWP profile and discovery
         run: node scripts/stage-arwp.mjs _site
+      - name: Add Goose ARWP Proof Mark
+        run: node scripts/inject-goose-proof-mark.mjs _site
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
